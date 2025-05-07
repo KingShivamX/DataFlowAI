@@ -1,0 +1,128 @@
+/* Dark Mode Styles */
+body.dark-mode {
+  background-color: #1a202c;
+  color: #e2e8f0;
+}
+
+/* Dark mode transitions */
+body, div, button, p, h1, h2, h3, h4, h5, h6, span, a {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Add a global style for scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Dark mode scrollbar */
+body.dark-mode ::-webkit-scrollbar-track {
+  background: #333;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: #666;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+/* Animation for cards */
+.algorithm-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.algorithm-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Highlight active menu item */
+.active-page {
+  font-weight: bold;
+  border-bottom: 2px solid currentColor;
+}
+
+/* Focus styles for better a11y */
+button:focus, a:focus, input:focus {
+  outline: 2px solid #4299e1;
+  outline-offset: 2px;
+}
+
+/* Dark mode focus styles */
+body.dark-mode button:focus, 
+body.dark-mode a:focus, 
+body.dark-mode input:focus {
+  outline-color: #f6e05e;
+}
+
+/* Dark mode card styles */
+body.dark-mode .algorithm-card {
+  background-color: #2d3748;
+  border-color: #4a5568;
+}
+
+body.dark-mode .algorithm-card:hover {
+  border-color: #f6e05e;
+}
+
+/* Dark mode button styles */
+body.dark-mode button.bg-gray-200 {
+  background-color: #4a5568;
+  color: #e2e8f0;
+}
+
+body.dark-mode button.bg-gray-200:hover {
+  background-color: #2d3748;
+}
+
+/* Canvas dark mode styles */
+body.dark-mode canvas {
+  background-color: #1a202c !important;
+  border-color: #2d3748 !important;
+}
+
+/* Dark mode text adjustments */
+body.dark-mode h1, 
+body.dark-mode h2, 
+body.dark-mode h3, 
+body.dark-mode h4, 
+body.dark-mode h5, 
+body.dark-mode h6 {
+  color: #f7fafc;
+}
+
+body.dark-mode p {
+  color: #e2e8f0;
+}
+
+/* Dark mode form elements */
+body.dark-mode input, 
+body.dark-mode select, 
+body.dark-mode textarea {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: #e2e8f0;
+}
+
+/* Dark mode tooltip styles */
+body.dark-mode .tooltip .tooltip-text {
+  background-color: #4a5568;
+}
+
+body.dark-mode .tooltip .tooltip-text::after {
+  border-color: #4a5568 transparent transparent transparent;
+} 

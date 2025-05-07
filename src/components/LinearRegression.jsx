@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { Chart } from "chart.js/auto"
 import { useNavigate } from "react-router-dom"
+import { useTutorial } from "../contexts/TutorialContext"
 
 const LinearRegression = () => {
     const chartRef = useRef(null)
     const chartInstance = useRef(null)
     const navigate = useNavigate()
+    const { startTutorial } = useTutorial()
 
     const [points, setPoints] = useState([])
     const [slope, setSlope] = useState(0)
@@ -97,17 +99,39 @@ const LinearRegression = () => {
                         tooltip: {
                             callbacks: {
                                 label: function (context) {
-                                    const point = context.raw
+                                    const point = context.raw;
+                                    const datasetLabel = context.dataset.label;
+                                    
                                     if (point.isError) {
-                                        return `Error: ${point.error.toFixed(
-                                            4
-                                        )}`
+                                        return `Error: ${point.error.toFixed(4)}`;
                                     }
-                                    return `(${point.x.toFixed(
-                                        2
-                                    )}, ${point.y.toFixed(2)})`
+                                    
+                                    if (datasetLabel === "Data Points") {
+                                        return [
+                                            `Coordinates: (${point.x.toFixed(2)}, ${point.y.toFixed(2)})`,
+                                            slope !== 0 ? `Predicted value: ${(slope * point.x + intercept).toFixed(4)}` : '',
+                                            slope !== 0 ? `Error: ${Math.abs(point.y - (slope * point.x + intercept)).toFixed(4)}` : ''
+                                        ].filter(Boolean);
+                                    }
+                                    
+                                    if (datasetLabel === "Regression Line") {
+                                        return `y = ${slope.toFixed(3)}x + ${intercept.toFixed(3)} (at x=${point.x.toFixed(2)})`;
+                                    }
+                                    
+                                    return `(${point.x.toFixed(2)}, ${point.y.toFixed(2)})`;
                                 },
-                            },
+                                title: function(context) {
+                                    const datasetLabel = context[0].dataset.label;
+                                    if (datasetLabel === "Data Points") {
+                                        return "Data Point Info";
+                                    } else if (datasetLabel === "Regression Line") {
+                                        return "Regression Line";
+                                    } else if (datasetLabel === "Error Lines") {
+                                        return "Error Measurement";
+                                    }
+                                    return datasetLabel;
+                                }
+                            }
                         },
                     },
                 },
@@ -252,20 +276,70 @@ const LinearRegression = () => {
         return errorLines
     }
 
+    // Create a tooltip component
+    const Tooltip = ({ text, children }) => {
+        const [isVisible, setIsVisible] = useState(false);
+        
+        return (
+            <div className="relative inline-block">
+                <div
+                    onMouseEnter={() => setIsVisible(true)}
+                    onMouseLeave={() => setIsVisible(false)}
+                >
+                    {children}
+                </div>
+                {isVisible && (
+                    <div className="absolute z-10 w-64 p-2 mt-2 text-sm text-white bg-gray-800 rounded shadow-lg">
+                        {text}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
-        <div className="container mx-auto p-4 min-h-screen bg-gray-50">
+        <div className="p-4 min-h-screen bg-gray-50">
             <div className="bg-white rounded-lg shadow-lg p-4">
-                <h2 className="text-2xl font-bold mb-4">Linear Regression</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => navigate('/')}
+                            className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 flex items-center gap-1"
+                            title="Return to home page"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Back
+                        </button>
+                        <h2 className="text-2xl font-bold">Linear Regression</h2>
+                    </div>
+                    <button
+                        onClick={startTutorial}
+                        className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
+                    >
+                        Show Tutorial
+                    </button>
+                </div>
+
+                <div className="mb-8">
+                    <canvas 
+                        ref={chartRef}
+                        onClick={handleCanvasClick}
+                        className="canvas w-full h-[500px]"
+                    ></canvas>
+                </div>
 
                 {/* Control buttons */}
-                <div className="mb-4 flex gap-4 flex-wrap">
+                <div className="controls mb-4 flex gap-4 flex-wrap">
                     <button
                         onClick={() => {
                             if (showErrorLines) setShowErrorLines(false)
                             trainModel()
                         }}
                         disabled={points.length < 2 || isTraining}
-                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        className="train-button px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        data-tutorial="train-model"
                     >
                         Train Model
                     </button>
@@ -273,70 +347,104 @@ const LinearRegression = () => {
                     <button
                         onClick={generateRandomPoints}
                         disabled={isTraining}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        className="random-points-button px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        data-tutorial="random-points"
                     >
                         Generate Random Points
                     </button>
 
                     <button
                         onClick={clearPoints}
-                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        className="clear-button px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        data-tutorial="clear-points"
                     >
                         Clear Points
                     </button>
 
-                    <button
-                        onClick={() => setShowErrorLines(!showErrorLines)}
-                        disabled={slope === 0}
-                        className={`px-4 py-2 ${
-                            showErrorLines ? "bg-red-500" : "bg-blue-500"
-                        } text-white rounded hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed`}
-                    >
-                        {showErrorLines ? "Hide Errors" : "Show Errors"}
-                    </button>
+                    <Tooltip text="Errors show the vertical distance between each data point and the regression line. These distances represent the difference between actual values and predicted values, helping visualize how well the model fits the data.">
+                        <button
+                            onClick={() => setShowErrorLines(!showErrorLines)}
+                            disabled={slope === 0}
+                            className={`show-errors-button px-4 py-2 ${
+                                showErrorLines ? "bg-red-500" : "bg-blue-500"
+                            } text-white rounded hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed`}
+                            data-tutorial="show-errors"
+                        >
+                            {showErrorLines ? "Hide Errors" : "Show Errors"}
+                        </button>
+                    </Tooltip>
                 </div>
-                {/* Stats display */}
-                <div className="mb-4 text-sm text-gray-600">
-                    <p>Number of points: {points.length}</p>
-                    {points.length > 0 && slope !== 0 && (
-                        <>
-                            <p>
-                                Equation: y = {slope.toFixed(3)}x +{" "}
-                                {intercept.toFixed(3)}
+                
+                {/* Error lines explanation */}
+                {showErrorLines && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                            <div className="w-4 h-8 bg-red-300 relative">
+                                <div className="absolute left-0 top-0 w-4 h-4 bg-blue-500 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
+                                <div className="absolute left-0 bottom-0 w-4 h-4 bg-red-500 rounded-full transform -translate-x-1/2 translate-y-1/2"></div>
+                            </div>
+                            <p className="text-sm text-red-700">
+                                <strong>Error lines:</strong> The vertical red lines show the distance between each data point (blue) and the predicted value on the regression line (red). 
+                                Smaller lines indicate better predictions. Hover over the lines to see the exact error value.
                             </p>
-                        </>
-                    )}
+                        </div>
+                    </div>
+                )}
+                
+                {/* Stats display */}
+                <div className="mb-4 bg-gray-50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                    <h3 className="text-lg font-semibold mb-3 text-gray-700">Graph Information</h3>
+                    <div className="flex flex-wrap gap-5">
+                        <div className="bg-white px-4 py-2 rounded-md shadow-sm border-l-4 border-blue-500">
+                            <Tooltip text="The number of data points affects the reliability of your regression model. More points generally lead to more reliable models. You need at least 2 points to train a linear regression model.">
+                                <div className="cursor-help">
+                                    <span className="text-gray-500 text-sm">Number of points:</span>
+                                    <p className="text-xl font-semibold">{points.length}</p>
+                                </div>
+                            </Tooltip>
+                        </div>
+                        
+                        {points.length > 0 && slope !== 0 && (
+                            <div className="bg-white px-4 py-2 rounded-md shadow-sm border-l-4 border-green-500">
+                                <Tooltip text="In the equation y = mx + b, 'm' is the slope (how steep the line is) and 'b' is the y-intercept (where the line crosses the y-axis). A positive slope means the line goes up from left to right, while a negative slope means it goes down.">
+                                    <div className="cursor-help">
+                                        <span className="text-gray-500 text-sm">Equation:</span>
+                                        <p className="text-xl font-semibold">
+                                            y = {slope.toFixed(3)}x + {intercept.toFixed(3)}
+                                        </p>
+                                    </div>
+                                </Tooltip>
+                            </div>
+                        )}
+                        
+                        {points.length > 0 && slope !== 0 && (
+                            <div className="bg-white px-4 py-2 rounded-md shadow-sm border-l-4 border-purple-500">
+                                <Tooltip text="The correlation coefficient measures the strength and direction of the linear relationship between two variables. Values close to 1 or -1 indicate strong correlation, while values near 0 indicate weak correlation.">
+                                    <div className="cursor-help">
+                                        <span className="text-gray-500 text-sm">Fit Quality:</span>
+                                        <p className="text-xl font-semibold">
+                                            {metrics.r2 > 0.8 ? "Excellent" : metrics.r2 > 0.6 ? "Good" : metrics.r2 > 0.4 ? "Fair" : "Poor"}
+                                        </p>
+                                    </div>
+                                </Tooltip>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Chart container */}
-                <div className="relative w-full h-[50vh] md:h-[67vh]">
-                    <canvas
-                        ref={chartRef}
-                        onClick={handleCanvasClick}
-                        className="cursor-crosshair"
-                    />
-                </div>
-
-                {/* Instructions */}
-                <div className="mt-4 text-sm text-gray-600">
-                    <p>
-                        Click on the graph to add points manually, or use the
-                        generate button for random points.
-                    </p>
-                    <p>You need at least 2 points to train the model.</p>
-                </div>
-
-                {/* Add this after the chart container */}
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <h3 className="font-semibold mb-2">Model Performance</h3>
+                {/* Metrics Section */}
+                <div className="metrics mt-6 bg-white/80 p-4 rounded-lg shadow">
+                    <h3 className="text-lg font-semibold mb-2">Model Metrics</h3>
                     <div className="text-sm">
                         {points.length > 0 && slope !== 0 && (
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="bg-white p-3 rounded border">
-                                        <p className="font-medium mb-2">
-                                            R² Score:
-                                        </p>
+                                        <Tooltip text="R² (coefficient of determination) measures the proportion of variance in the dependent variable that is predictable from the independent variable. It ranges from -∞ to 1, where 1 indicates a perfect fit, 0 indicates the model is no better than predicting the mean, and negative values indicate the model performs worse than using the mean.">
+                                            <p className="font-medium mb-2 cursor-help border-b border-dotted border-gray-300 inline-block">
+                                                R² Score:
+                                            </p>
+                                        </Tooltip>
                                         <p className="text-lg mb-1">
                                             {metrics.r2.toFixed(4)}
                                         </p>
@@ -355,9 +463,11 @@ const LinearRegression = () => {
                                     </div>
 
                                     <div className="bg-white p-3 rounded border">
-                                        <p className="font-medium mb-2">
-                                            Mean Squared Error (MSE):
-                                        </p>
+                                        <Tooltip text="Mean Squared Error (MSE) calculates the average of the squared differences between predicted and actual values. It gives higher weight to larger errors due to the squaring operation. This makes it particularly sensitive to outliers, but useful for penalizing large prediction errors.">
+                                            <p className="font-medium mb-2 cursor-help border-b border-dotted border-gray-300 inline-block">
+                                                Mean Squared Error (MSE):
+                                            </p>
+                                        </Tooltip>
                                         <p className="text-lg mb-1">
                                             {metrics.mse.toFixed(4)}
                                         </p>
@@ -376,9 +486,11 @@ const LinearRegression = () => {
                                     </div>
 
                                     <div className="bg-white p-3 rounded border">
-                                        <p className="font-medium mb-2">
-                                            Mean Absolute Error (MAE):
-                                        </p>
+                                        <Tooltip text="Mean Absolute Error (MAE) measures the average magnitude of errors in a set of predictions, without considering their direction. It's the average over the test sample of the absolute differences between prediction and actual observation. Unlike MSE, it uses the same scale as the data and is less affected by outliers.">
+                                            <p className="font-medium mb-2 cursor-help border-b border-dotted border-gray-300 inline-block">
+                                                Mean Absolute Error (MAE):
+                                            </p>
+                                        </Tooltip>
                                         <p className="text-lg mb-1">
                                             {metrics.mae.toFixed(4)}
                                         </p>
@@ -444,13 +556,16 @@ const LinearRegression = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Home button moved to bottom */}
-            <div className="mt-4 flex justify-start">
+            
+            {/* Bottom back button */}
+            <div className="flex justify-center mt-6 mb-8">
                 <button
-                    onClick={() => navigate("/")}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    onClick={() => navigate('/')}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 flex items-center gap-2"
                 >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
                     Back to Home
                 </button>
             </div>
