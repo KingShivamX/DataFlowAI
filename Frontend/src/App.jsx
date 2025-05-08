@@ -6,26 +6,31 @@ import LinearRegression from "./components/LinearRegression"
 import LogisticRegression from "./components/LogisticRegression"
 import KNN from "./components/KNN"
 import KMeans from "./components/KMeans"
+import About from "./components/About"
 import NotFound from "./components/common/NotFound"
+import { AnimatePresence } from "framer-motion"
 
 function App() {
     return (
         <>
             <Header />
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route
-                    path="/linear-regression"
-                    element={<LinearRegression />}
-                />
-                <Route
-                    path="/logistic-regression"
-                    element={<LogisticRegression />}
-                />
-                <Route path="/knn" element={<KNN />} />
-                <Route path="/kmeans" element={<KMeans />} />
-                <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AnimatePresence mode="wait">
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route
+                        path="/linear-regression"
+                        element={<LinearRegression />}
+                    />
+                    <Route
+                        path="/logistic-regression"
+                        element={<LogisticRegression />}
+                    />
+                    <Route path="/knn" element={<KNN />} />
+                    <Route path="/kmeans" element={<KMeans />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="*" element={<NotFound />} />
+                </Routes>
+            </AnimatePresence>
             <Footer />
         </>
     )
