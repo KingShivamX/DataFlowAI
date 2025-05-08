@@ -29,7 +29,7 @@ const NotFound = () => {
                 </p>
                 <div className="mb-8">
                     <img
-                        src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGNmYTJiNzktZGE0NC00NzBjLWI5ZDYtNDM3ZWM5ZTQyZWNiXQ/14uQ3cOFteDaU/giphy.gif"
+                        src="notfound.gif"
                         alt="John Travolta confused"
                         className="rounded-lg w-64 mx-auto shadow-md"
                     />

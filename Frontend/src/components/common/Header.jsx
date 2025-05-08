@@ -82,9 +82,9 @@ const Header = () => {
                                         Flow
                                     </span>
                                     <span className="text-gray-800 font-black">
-                                        AI
-                                    </span>
-                                </h1>
+                            AI
+                        </span>
+                    </h1>
                                 <div className="h-0.5 w-0 group-hover:w-full bg-gradient-to-r from-yellow-400 to-amber-500 transition-all duration-300"></div>
                             </div>
                         </div>
@@ -234,7 +234,7 @@ const Header = () => {
                             </svg>
                             GitHub
                         </a>
-                    </div>
+                </div>
                 </motion.div>
             )}
 

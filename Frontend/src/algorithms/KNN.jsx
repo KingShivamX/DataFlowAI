@@ -3,6 +3,7 @@ import { Chart } from "chart.js/auto"
 import { useNavigate } from "react-router-dom"
 import AlgorithmLayout from "./AlgorithmLayout"
 import { motion } from "framer-motion"
+import KNNTheory from "../components/theory/KNNTheory"
 
 const KNN = () => {
     const chartRef = useRef(null)
@@ -15,9 +16,7 @@ const KNN = () => {
     const [testPoint, setTestPoint] = useState(null)
     const [nearestNeighbors, setNearestNeighbors] = useState([])
     const [prediction, setPrediction] = useState(null)
-    const [metrics, setMetrics] = useState({
-        confusionMatrix: null,
-    })
+    const [addingTestPoint, setAddingTestPoint] = useState(false)
 
     // Calculate Euclidean distance between two points
     const calculateDistance = (p1, p2) => {
@@ -69,14 +68,14 @@ const KNN = () => {
                         {
                             label: "Class 0",
                             data: points.filter((p) => p.class === 0),
-                            backgroundColor: "rgba(54, 162, 235, 0.5)",
+                            backgroundColor: "rgba(54, 162, 235, 0.7)",
                             pointRadius: 8,
                             animation: false,
                         },
                         {
                             label: "Class 1",
                             data: points.filter((p) => p.class === 1),
-                            backgroundColor: "rgba(255, 99, 132, 0.5)",
+                            backgroundColor: "rgba(255, 99, 132, 0.7)",
                             pointRadius: 8,
                             animation: false,
                         },
@@ -84,7 +83,7 @@ const KNN = () => {
                         {
                             label: "Class 2",
                             data: points.filter((p) => p.class === 2),
-                            backgroundColor: "rgba(75, 192, 192, 0.5)", // Teal color for class 2
+                            backgroundColor: "rgba(75, 192, 192, 0.7)", // Teal color for class 2
                             pointRadius: 8,
                             animation: false,
                         },
@@ -95,12 +94,12 @@ const KNN = () => {
                                       data: [testPoint],
                                       backgroundColor:
                                           prediction === null
-                                              ? "rgba(255, 206, 86, 0.5)"
+                                              ? "rgba(255, 206, 86, 0.7)"
                                               : prediction === 0
-                                              ? "rgba(54, 162, 235, 0.5)"
+                                              ? "rgba(54, 162, 235, 0.7)"
                                               : prediction === 1
-                                              ? "rgba(255, 99, 132, 0.5)"
-                                              : "rgba(75, 192, 192, 0.5)",
+                                              ? "rgba(255, 99, 132, 0.7)"
+                                              : "rgba(75, 192, 192, 0.7)",
                                       pointRadius: 12,
                                       pointStyle: "triangle",
                                   },
@@ -110,7 +109,7 @@ const KNN = () => {
                                           (n) => n.point
                                       ),
                                       backgroundColor:
-                                          "rgba(255, 206, 86, 0.5)",
+                                          "rgba(255, 206, 86, 0.7)",
                                       pointRadius: 12,
                                       pointBorderWidth: 2,
                                       pointBorderColor: "rgba(255, 206, 86, 1)",
@@ -162,113 +161,118 @@ const KNN = () => {
             const xValue = Math.max(0, Math.min(1, x))
             const yValue = Math.max(0, Math.min(1, y))
 
-            setPoints([
-                ...points,
-                { x: xValue, y: yValue, class: currentClass },
-            ])
-        }
-    }
-
-    // Add test point
-    const handleAddTestPoint = (event) => {
-        if (chartRef.current) {
-            const canvas = chartRef.current
-            const rect = canvas.getBoundingClientRect()
-
-            // Get the scaling factor of the canvas
-            const scaleX = canvas.width / rect.width
-            const scaleY = canvas.height / rect.height
-
-            // Calculate the position considering the scale
-            const x = ((event.clientX - rect.left) * scaleX) / canvas.width
-            const y = 1 - ((event.clientY - rect.top) * scaleY) / canvas.height
-
-            const xValue = Math.max(0, Math.min(1, x))
-            const yValue = Math.max(0, Math.min(1, y))
-
-            const newTestPoint = { x: xValue, y: yValue }
-            setTestPoint(newTestPoint)
-            if (points.length >= kValue) {
-                predictClass(newTestPoint)
+            if (addingTestPoint) {
+                const newTestPoint = { x: xValue, y: yValue }
+                setTestPoint(newTestPoint)
+                if (points.length >= kValue) {
+                    predictClass(newTestPoint)
+                }
+                // Don't set addingTestPoint to false so it stays in test point mode
+            } else {
+                setPoints([
+                    ...points,
+                    { x: xValue, y: yValue, class: currentClass },
+                ])
             }
         }
     }
 
-    // Add function to calculate metrics using leave-one-out cross validation
-    const calculateMetrics = () => {
-        if (points.length < kValue) return
-
-        const matrix = Array(3)
-            .fill()
-            .map(() => Array(3).fill(0))
-
-        // Leave-one-out cross validation
-        points.forEach((testPoint, idx) => {
-            const otherPoints = points.filter((_, i) => i !== idx)
-
-            // Calculate distances
-            const distances = otherPoints.map((p) => ({
-                point: p,
-                distance: calculateDistance(p, testPoint),
-            }))
-
-            // Get k nearest
-            const nearest = distances
-                .sort((a, b) => a.distance - b.distance)
-                .slice(0, kValue)
-
-            // Predict class
-            const classCounts = nearest.reduce((counts, n) => {
-                counts[n.point.class] = (counts[n.point.class] || 0) + 1
-                return counts
-            }, {})
-
-            const predictedClass = Object.entries(classCounts).reduce(
-                (max, [classLabel, count]) =>
-                    count > (classCounts[max] || 0)
-                        ? parseInt(classLabel)
-                        : max,
-                0
-            )
-
-            // Update confusion matrix
-            matrix[testPoint.class][predictedClass]++
-        })
-
-        setMetrics({
-            confusionMatrix: matrix,
-        })
+    // Toggle test point mode
+    const handleAddTestPoint = () => {
+        setAddingTestPoint(!addingTestPoint)
     }
 
-    // Call calculateMetrics when points or k changes
-    useEffect(() => {
-        calculateMetrics()
-    }, [points, kValue])
-
-    // Add this function to calculate per-class metrics
-    const calculateClassMetrics = (matrix, classIndex) => {
-        const tp = matrix[classIndex][classIndex]
-        let fp = 0,
-            fn = 0
-
-        // Calculate FP and FN
-        for (let i = 0; i < matrix.length; i++) {
-            if (i !== classIndex) {
-                fp += matrix[i][classIndex] // Other classes predicted as this class
-                fn += matrix[classIndex][i] // This class predicted as other classes
-            }
-        }
-
-        const precision = tp / (tp + fp) || 0
-        const recall = tp / (tp + fn) || 0
-        const f1 = (2 * (precision * recall)) / (precision + recall) || 0
-
-        return { tp, fp, fn, precision, recall, f1 }
-    }
-
-    // Clear all points
+    // Clear points
     const clearPoints = () => {
         setPoints([])
+        setTestPoint(null)
+        setNearestNeighbors([])
+        setPrediction(null)
+        setAddingTestPoint(false)
+    }
+
+    // Generate random points for all classes
+    const generateRandomPoints = () => {
+        const newPoints = []
+        const numPointsPerClass = 12
+
+        // Generate class 0 points (bottom-left corner)
+        for (let i = 0; i < numPointsPerClass; i++) {
+            // Center of cluster (bottom-left)
+            const centerX = 0.25
+            const centerY = 0.25
+
+            // Add gaussian-like noise with controlled spread
+            const angle = Math.random() * 2 * Math.PI
+            const radius = 0.15 * Math.sqrt(Math.random()) // Use sqrt for better distribution
+
+            const xValue = Math.max(
+                0,
+                Math.min(1, centerX + radius * Math.cos(angle))
+            )
+            const yValue = Math.max(
+                0,
+                Math.min(1, centerY + radius * Math.sin(angle))
+            )
+
+            newPoints.push({ x: xValue, y: yValue, class: 0 })
+        }
+
+        // Generate class 1 points (top-right corner)
+        for (let i = 0; i < numPointsPerClass; i++) {
+            // Center of cluster (top-right)
+            const centerX = 0.75
+            const centerY = 0.75
+
+            // Add gaussian-like noise
+            const angle = Math.random() * 2 * Math.PI
+            const radius = 0.15 * Math.sqrt(Math.random())
+
+            const xValue = Math.max(
+                0,
+                Math.min(1, centerX + radius * Math.cos(angle))
+            )
+            const yValue = Math.max(
+                0,
+                Math.min(1, centerY + radius * Math.sin(angle))
+            )
+
+            newPoints.push({ x: xValue, y: yValue, class: 1 })
+        }
+
+        // Generate class 2 points (top-left but with some overlap)
+        for (let i = 0; i < numPointsPerClass; i++) {
+            // Center of cluster (top-left with slight shift toward center)
+            const centerX = 0.3
+            const centerY = 0.7
+
+            // Add gaussian-like noise
+            const angle = Math.random() * 2 * Math.PI
+            const radius = 0.18 * Math.sqrt(Math.random()) // Slightly larger radius for more overlap
+
+            const xValue = Math.max(
+                0,
+                Math.min(1, centerX + radius * Math.cos(angle))
+            )
+            const yValue = Math.max(
+                0,
+                Math.min(1, centerY + radius * Math.sin(angle))
+            )
+
+            newPoints.push({ x: xValue, y: yValue, class: 2 })
+        }
+
+        setPoints(newPoints)
+        setTestPoint(null)
+        setNearestNeighbors([])
+        setPrediction(null)
+        setAddingTestPoint(false)
+    }
+
+    // Turn off test point mode when changing class selection
+    const handleClassChange = (classValue) => {
+        setCurrentClass(classValue)
+        setAddingTestPoint(false)
         setTestPoint(null)
         setNearestNeighbors([])
         setPrediction(null)
@@ -276,33 +280,27 @@ const KNN = () => {
 
     return (
         <AlgorithmLayout title="K-Nearest Neighbors">
-            <motion.div
-                className="bg-white/30 backdrop-blur-sm rounded-3xl p-6 shadow-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-            >
-                <div className="mb-6">
-                    <p className="text-gray-700 mb-4">
-                        K-Nearest Neighbors classifies data points based on the
-                        classes of their nearest neighbors. Add training points,
-                        set the k value, then add a test point to see the
-                        classification.
+            <div className="px-2 sm:px-4">
+                <div className="mb-5">
+                    <p className="text-gray-700 mb-3">
+                        KNN classifies points based on their nearest neighbors.
+                        Select a class to add points, set K, then add a test
+                        point to see classification in action.
                     </p>
 
-                    <div className="flex flex-wrap gap-3 mb-6 items-center">
-                        <div className="flex items-center space-x-4 mr-4">
+                    <div className="flex flex-wrap gap-3 mb-4 items-center">
+                        <div className="flex items-center gap-3 mr-4">
                             <div>
                                 <input
                                     type="radio"
                                     id="class0"
                                     checked={currentClass === 0}
-                                    onChange={() => setCurrentClass(0)}
+                                    onChange={() => handleClassChange(0)}
                                     className="mr-2"
                                 />
                                 <label
                                     htmlFor="class0"
-                                    className="cursor-pointer"
+                                    className="text-blue-600 cursor-pointer"
                                     style={{ color: "rgba(54, 162, 235, 1)" }}
                                 >
                                     Class 0
@@ -313,12 +311,12 @@ const KNN = () => {
                                     type="radio"
                                     id="class1"
                                     checked={currentClass === 1}
-                                    onChange={() => setCurrentClass(1)}
+                                    onChange={() => handleClassChange(1)}
                                     className="mr-2"
                                 />
                                 <label
                                     htmlFor="class1"
-                                    className="cursor-pointer"
+                                    className="text-red-500 cursor-pointer"
                                     style={{ color: "rgba(255, 99, 132, 1)" }}
                                 >
                                     Class 1
@@ -329,17 +327,38 @@ const KNN = () => {
                                     type="radio"
                                     id="class2"
                                     checked={currentClass === 2}
-                                    onChange={() => setCurrentClass(2)}
+                                    onChange={() => handleClassChange(2)}
                                     className="mr-2"
                                 />
                                 <label
                                     htmlFor="class2"
-                                    className="cursor-pointer"
+                                    className="text-teal-500 cursor-pointer"
                                     style={{ color: "rgba(75, 192, 192, 1)" }}
                                 >
                                     Class 2
                                 </label>
                             </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="kValue" className="text-gray-700">
+                                K:
+                            </label>
+                            <input
+                                type="range"
+                                id="kValue"
+                                min="1"
+                                max="15"
+                                value={kValue}
+                                onChange={(e) => {
+                                    setKValue(Number(e.target.value))
+                                    setAddingTestPoint(false)
+                                }}
+                                className="w-24"
+                            />
+                            <span className="text-gray-700 min-w-[20px]">
+                                {kValue}
+                            </span>
                         </div>
 
                         <button
@@ -354,60 +373,41 @@ const KNN = () => {
                             Clear All
                         </button>
 
-                        <div className="flex items-center">
-                            <label
-                                htmlFor="kValue"
-                                className="mr-2 text-gray-700"
-                            >
-                                K value:
-                            </label>
-                            <input
-                                id="kValue"
-                                type="number"
-                                min="1"
-                                max="10"
-                                value={kValue}
-                                onChange={(e) =>
-                                    setKValue(
-                                        Math.min(
-                                            10,
-                                            Math.max(
-                                                1,
-                                                parseInt(e.target.value) || 1
-                                            )
-                                        )
-                                    )
-                                }
-                                className="w-16 px-2 py-1 border rounded bg-white/50"
-                            />
-                        </div>
-                    </div>
+                        <button
+                            onClick={generateRandomPoints}
+                            className="px-4 py-2 rounded-lg bg-amber-400 text-amber-900 hover:bg-amber-500"
+                        >
+                            Generate Random Points
+                        </button>
 
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="text-sm bg-white/50 px-3 py-1 rounded-full text-gray-700">
-                            Left click: Add training points
-                        </span>
-                        <span className="text-sm bg-white/50 px-3 py-1 rounded-full text-gray-700">
-                            Right click: Add test point
-                        </span>
-                        {prediction !== null && (
-                            <span className="text-sm bg-amber-100 px-3 py-1 rounded-full text-gray-700 font-medium">
-                                Prediction: Class {prediction}
-                            </span>
-                        )}
+                        <button
+                            onClick={handleAddTestPoint}
+                            disabled={points.length < kValue}
+                            className={`px-4 py-2 rounded-lg ${
+                                points.length < kValue
+                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    : addingTestPoint
+                                    ? "bg-green-600 text-white"
+                                    : "bg-green-500 text-white hover:bg-green-600"
+                            }`}
+                        >
+                            {addingTestPoint
+                                ? "Adding Test Point"
+                                : "Add Test Point"}
+                        </button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 bg-white/70 rounded-xl shadow-sm p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="lg:col-span-3 bg-white/95 rounded-xl shadow-md border border-amber-200 overflow-hidden">
                         <div
-                            className="w-full h-[500px]"
+                            className="w-full h-[520px] relative"
                             onClick={handleCanvasClick}
-                            onContextMenu={(e) => {
-                                e.preventDefault()
-                                handleAddTestPoint(e)
+                            style={{
+                                cursor: addingTestPoint
+                                    ? "crosshair"
+                                    : "pointer",
                             }}
-                            style={{ cursor: "crosshair" }}
                         >
                             <canvas
                                 ref={chartRef}
@@ -416,120 +416,117 @@ const KNN = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    <div className="space-y-4">
+                        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-md border-2 border-amber-300 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-amber-800 border-b-2 border-amber-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-amber-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
                                 Instructions
                             </h3>
-                            <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-1">
+                            <ol className="list-decimal pl-5 text-sm text-amber-900 space-y-1 relative z-10">
                                 <li>Select a class (0, 1, or 2)</li>
-                                <li>Left click to add training points</li>
-                                <li>Right click to add or move a test point</li>
-                                <li>Adjust the K value as needed</li>
+                                <li>Click on the graph to add data points</li>
+                                <li>Adjust K value (number of neighbors)</li>
                                 <li>
-                                    The test point will be classified based on
-                                    the {kValue} nearest neighbors
+                                    Click "Add Test Point" then place it on the
+                                    graph
+                                </li>
+                                <li>
+                                    Move test point to see classification update
                                 </li>
                             </ol>
                         </div>
 
-                        {points.length >= kValue && metrics.confusionMatrix && (
-                            <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                                <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                                    Model Validation
-                                </h3>
-                                <p className="text-sm text-gray-600 mb-2">
-                                    Leave-one-out cross-validation metrics:
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md border-2 border-blue-200 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-blue-800 border-b-2 border-blue-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-blue-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12z"
+                                        clipRule="evenodd"
+                                    />
+                                    <path d="M10 6a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1H8a1 1 0 110-2h1V7a1 1 0 011-1z" />
+                                </svg>
+                                Algorithm Info
+                            </h3>
+                            <div className="space-y-2 relative z-10">
+                                <p className="text-blue-900 bg-blue-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">Points:</span>
+                                    <span className="font-bold bg-blue-200 px-2 py-0.5 rounded-md">
+                                        {points.length}
+                                    </span>
                                 </p>
-
-                                <div className="space-y-4 mt-4">
-                                    {[0, 1, 2].map((classIndex) => {
-                                        const classMetrics =
-                                            calculateClassMetrics(
-                                                metrics.confusionMatrix,
-                                                classIndex
-                                            )
-                                        return (
-                                            <div
-                                                key={classIndex}
-                                                className="bg-white/50 p-2 rounded"
-                                            >
-                                                <p className="font-medium text-gray-700 mb-1">
-                                                    Class {classIndex}:
-                                                </p>
-                                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                                    <p className="text-gray-700">
-                                                        Precision:{" "}
-                                                        {(
-                                                            classMetrics.precision *
-                                                            100
-                                                        ).toFixed(1)}
-                                                        %
-                                                    </p>
-                                                    <p className="text-gray-700">
-                                                        Recall:{" "}
-                                                        {(
-                                                            classMetrics.recall *
-                                                            100
-                                                        ).toFixed(1)}
-                                                        %
-                                                    </p>
-                                                    <p className="text-gray-700">
-                                                        F1 Score:{" "}
-                                                        {(
-                                                            classMetrics.f1 *
-                                                            100
-                                                        ).toFixed(1)}
-                                                        %
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            </div>
-                        )}
-
-                        {testPoint && nearestNeighbors.length > 0 && (
-                            <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                                <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                                    Test Point Details
-                                </h3>
-                                <p className="text-gray-700 mb-2">
+                                <p className="text-blue-900 bg-blue-100/80 rounded-md px-3 py-1 flex justify-between items-center">
                                     <span className="font-medium">
-                                        Coordinates:
-                                    </span>{" "}
-                                    ({testPoint.x.toFixed(2)},{" "}
-                                    {testPoint.y.toFixed(2)})
+                                        K Value:
+                                    </span>
+                                    <span className="font-bold bg-blue-200 px-2 py-0.5 rounded-md">
+                                        {kValue}
+                                    </span>
                                 </p>
-                                <p className="text-gray-700 mb-2">
-                                    <span className="font-medium">
-                                        Prediction:
-                                    </span>{" "}
-                                    Class {prediction}
-                                </p>
-                                <p className="text-gray-700 mb-2 font-medium">
-                                    Nearest neighbors:
-                                </p>
-                                <div className="max-h-32 overflow-y-auto text-sm">
-                                    {nearestNeighbors.map((n, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="mb-1 border-b border-gray-100 pb-1"
+                                {testPoint && (
+                                    <p className="text-blue-900 bg-blue-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                        <span className="font-medium">
+                                            Prediction:
+                                        </span>
+                                        <span
+                                            className="font-bold px-2 py-0.5 rounded-md"
+                                            style={{
+                                                backgroundColor:
+                                                    prediction === 0
+                                                        ? "rgba(54, 162, 235, 1)"
+                                                        : prediction === 1
+                                                        ? "rgba(255, 99, 132, 1)"
+                                                        : "rgba(75, 192, 192, 1)",
+                                                color: "#fff",
+                                            }}
                                         >
-                                            <p>
-                                                Point #{idx + 1}: Class{" "}
-                                                {n.point.class} at distance{" "}
-                                                {n.distance.toFixed(3)}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
+                                            Class {prediction}
+                                        </span>
+                                    </p>
+                                )}
+                                {addingTestPoint && (
+                                    <p className="text-amber-600 font-medium bg-amber-50 border border-amber-200 rounded-md px-3 py-1 mt-2 flex items-center">
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-5 w-5 mr-1 animate-pulse"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                        Click on the graph to place or move test
+                                        point
+                                    </p>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
-            </motion.div>
+
+                <KNNTheory />
+            </div>
         </AlgorithmLayout>
     )
 }

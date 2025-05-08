@@ -3,6 +3,7 @@ import { Chart } from "chart.js/auto"
 import { useNavigate } from "react-router-dom"
 import AlgorithmLayout from "./AlgorithmLayout"
 import { motion } from "framer-motion"
+import KMeansTheory from "../components/theory/KMeansTheory"
 
 const KMeans = () => {
     const chartRef = useRef(null)
@@ -15,6 +16,7 @@ const KMeans = () => {
     const [iterations, setIterations] = useState(0)
     const [isRunning, setIsRunning] = useState(false)
     const [clusters, setClusters] = useState([])
+    const [inertia, setInertia] = useState(0)
 
     // Calculate Euclidean distance between two points
     const calculateDistance = (p1, p2) => {
@@ -66,6 +68,17 @@ const KMeans = () => {
             })
     }
 
+    // Calculate inertia (sum of squared distances to nearest centroid)
+    const calculateInertia = (clusteredPoints, centroids) => {
+        if (!clusteredPoints.length || !centroids.length) return 0
+
+        return clusteredPoints.reduce((sum, point) => {
+            const centroid = centroids[point.cluster]
+            const distance = calculateDistance(point, centroid)
+            return sum + Math.pow(distance, 2)
+        }, 0)
+    }
+
     // Start clustering process
     const startClustering = async () => {
         if (isRunning || points.length < k) return
@@ -74,7 +87,7 @@ const KMeans = () => {
         setIterations(0)
 
         try {
-            // Step 1: Initialize centroids with animation
+            // Initialize centroids
             const initialCentroids = Array(k)
                 .fill()
                 .map(() => ({
@@ -84,25 +97,27 @@ const KMeans = () => {
             setCentroids(initialCentroids)
 
             // Initial pause to show random centroids
-            await new Promise((resolve) => setTimeout(resolve, 1000))
+            await new Promise((resolve) => setTimeout(resolve, 800))
 
             let currentCentroids = [...initialCentroids]
             let iterationCount = 0
-            const MAX_ITERATIONS = 50
+            const MAX_ITERATIONS = 30
 
             while (iterationCount < MAX_ITERATIONS) {
-                // Step 2: Assign points to clusters (with delay)
+                // Assign points to clusters
                 const clusteredPoints = assignToClusters(
                     points,
                     currentCentroids
                 )
                 setClusters(clusteredPoints)
-                await new Promise((resolve) => setTimeout(resolve, 500))
 
-                // Step 3: Update centroids with interpolation
+                // Pause to observe the clusters
+                await new Promise((resolve) => setTimeout(resolve, 800))
+
+                // Calculate new centroids
                 const newCentroids = updateCentroids(clusteredPoints, k)
 
-                // Animate centroid movement
+                // Animate centroid movement with interpolation steps
                 const STEPS = 10
                 for (let step = 0; step <= STEPS; step++) {
                     const interpolatedCentroids = currentCentroids.map(
@@ -121,13 +136,20 @@ const KMeans = () => {
                     await new Promise((resolve) => setTimeout(resolve, 50))
                 }
 
-                // Step 4: Check for convergence
+                // Check for convergence
                 const hasConverged = currentCentroids.every(
                     (centroid, i) =>
                         calculateDistance(centroid, newCentroids[i]) < 0.00001
                 )
 
                 setIterations(iterationCount + 1)
+
+                // Calculate inertia
+                const currentInertia = calculateInertia(
+                    clusteredPoints,
+                    newCentroids
+                )
+                setInertia(currentInertia)
 
                 // If converged, stop
                 if (hasConverged) break
@@ -174,6 +196,10 @@ const KMeans = () => {
         }
 
         const ctx = chartRef.current.getContext("2d")
+
+        // Create custom animation for centroids only
+        Chart.defaults.datasets.scatter.animation = false
+
         const data = {
             datasets: [
                 {
@@ -182,12 +208,13 @@ const KMeans = () => {
                     backgroundColor: clusters.length
                         ? clusters.map(
                               (p) =>
-                                  `hsl(${
+                                  `hsla(${
                                       ((p.cluster * 360) / k) % 360
-                                  }, 70%, 70%)`
+                                  }, 80%, 65%, 0.8)`
                           )
-                        : Array(points.length).fill("rgba(54, 162, 235, 0.5)"),
+                        : Array(points.length).fill("rgba(54, 162, 235, 0.7)"),
                     pointRadius: 8,
+                    animation: false,
                 },
                 {
                     label: "Centroids",
@@ -195,10 +222,21 @@ const KMeans = () => {
                     backgroundColor: Array(k)
                         .fill()
                         .map(
-                            (_, i) => `hsl(${((i * 360) / k) % 360}, 70%, 50%)`
+                            (_, i) =>
+                                `hsla(${((i * 360) / k) % 360}, 80%, 50%, 0.9)`
                         ),
                     pointRadius: 12,
                     pointStyle: "triangle",
+                    borderWidth: 2,
+                    borderColor: Array(k)
+                        .fill()
+                        .map(
+                            (_, i) =>
+                                `hsla(${((i * 360) / k) % 360}, 90%, 30%, 0.8)`
+                        ),
+                    animation: {
+                        duration: 0, // Set to 0 to make it follow setCentroids exactly
+                    },
                 },
             ],
         }
@@ -209,14 +247,12 @@ const KMeans = () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: {
-                    duration: 0, // Shorter animation duration
+                animations: {
+                    colors: false,
                 },
-                transitions: {
-                    active: {
-                        animation: {
-                            duration: 0,
-                        },
+                datasets: {
+                    scatter: {
+                        animation: false,
                     },
                 },
                 scales: {
@@ -237,46 +273,167 @@ const KMeans = () => {
                         },
                     },
                 },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const point = context.raw
+                                const datasetIndex = context.datasetIndex
+                                if (datasetIndex === 1) {
+                                    // Centroids
+                                    return `Centroid ${context.dataIndex}`
+                                } else {
+                                    // Data points
+                                    return clusters.length
+                                        ? `Point: (${point.x.toFixed(
+                                              2
+                                          )}, ${point.y.toFixed(
+                                              2
+                                          )}), Cluster: ${point.cluster}`
+                                        : `Point: (${point.x.toFixed(
+                                              2
+                                          )}, ${point.y.toFixed(2)})`
+                                }
+                            },
+                        },
+                    },
+                },
             },
         })
     }, [points, centroids, clusters, k])
 
-    // Also modify the clear function to reset everything properly
     const handleClear = () => {
+        if (isRunning) return
         setPoints([])
         setCentroids([])
         setClusters([])
         setIterations(0)
-        setIsRunning(false)
+        setInertia(0)
+    }
+
+    // Generate random points following a pattern based on K value
+    const generateRandomPoints = () => {
+        if (isRunning) return
+        const newPoints = []
+        const numCenters = k // Use the current K value
+        const numPointsPerCenter = 15
+
+        // Create an array of cluster centers that are reasonably separated
+        const centers = []
+
+        // First center is always near bottom-left
+        centers.push({
+            x: 0.2 + Math.random() * 0.1,
+            y: 0.2 + Math.random() * 0.1,
+        })
+
+        // Last center is always near top-right
+        if (numCenters > 1) {
+            centers.push({
+                x: 0.7 + Math.random() * 0.1,
+                y: 0.7 + Math.random() * 0.1,
+            })
+        }
+
+        // Generate remaining centers with reasonable spacing
+        if (numCenters > 2) {
+            // Place centers in specific regions based on K value
+            const regions = [
+                { x: 0.2, y: 0.7 }, // top-left
+                { x: 0.7, y: 0.2 }, // bottom-right
+                { x: 0.5, y: 0.5 }, // center
+                { x: 0.3, y: 0.4 }, // mid-left
+                { x: 0.7, y: 0.5 }, // mid-right
+                { x: 0.5, y: 0.8 }, // top-center
+            ]
+
+            // Add centers from predefined regions
+            for (let i = 0; i < numCenters - 2 && i < regions.length; i++) {
+                centers.push({
+                    x: regions[i].x + (Math.random() - 0.5) * 0.1,
+                    y: regions[i].y + (Math.random() - 0.5) * 0.1,
+                })
+            }
+        }
+
+        // Generate points around each center
+        centers.forEach((center, centerIndex) => {
+            for (let j = 0; j < numPointsPerCenter; j++) {
+                // Add some gaussian-like noise
+                const angle = Math.random() * 2 * Math.PI
+                const radius = Math.random() * 0.12 // Smaller radius to make clusters more distinct
+                const x = Math.max(
+                    0,
+                    Math.min(1, center.x + radius * Math.cos(angle))
+                )
+                const y = Math.max(
+                    0,
+                    Math.min(1, center.y + radius * Math.sin(angle))
+                )
+                newPoints.push({ x, y })
+            }
+        })
+
+        setPoints(newPoints)
+        setCentroids([])
+        setClusters([])
+        setIterations(0)
+        setInertia(0)
     }
 
     return (
         <AlgorithmLayout title="K-Means Clustering">
-            <motion.div
-                className="bg-white/30 backdrop-blur-sm rounded-3xl p-6 shadow-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-            >
-                <div className="mb-6">
-                    <p className="text-gray-700 mb-4">
-                        K-Means clustering groups data points into clusters
-                        based on similarity. Click on the graph to add points,
-                        set the number of clusters, then start the algorithm to
-                        see clustering in action.
+            <div className="px-2 sm:px-4">
+                <div className="mb-5">
+                    <p className="text-gray-700 mb-3">
+                        K-Means clustering groups similar data points together.
+                        Add points to the canvas, set the number of clusters
+                        (K), and then run the algorithm to watch the clustering
+                        process.
                     </p>
 
-                    <div className="flex flex-wrap gap-3 mb-6 items-center">
+                    <div className="flex flex-wrap gap-3 mb-4 items-center">
+                        <div className="flex items-center gap-2">
+                            <label htmlFor="kValue" className="text-gray-700">
+                                Clusters (K):
+                            </label>
+                            <input
+                                type="range"
+                                id="kValue"
+                                min="2"
+                                max="8"
+                                value={k}
+                                onChange={(e) => setK(Number(e.target.value))}
+                                className="w-24"
+                                disabled={isRunning}
+                            />
+                            <span className="text-gray-700 min-w-[20px]">
+                                {k}
+                            </span>
+                        </div>
+
                         <button
                             onClick={startClustering}
                             disabled={isRunning || points.length < k}
                             className={`px-4 py-2 rounded-lg ${
                                 isRunning || points.length < k
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-gradient-to-r from-yellow-500 to-amber-500 text-white hover:shadow-md"
+                                    : "bg-green-500 text-white hover:bg-green-600"
                             }`}
                         >
                             {isRunning ? "Clustering..." : "Start Clustering"}
+                        </button>
+
+                        <button
+                            onClick={generateRandomPoints}
+                            disabled={isRunning}
+                            className={`px-4 py-2 rounded-lg ${
+                                isRunning
+                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    : "bg-amber-400 text-amber-900 hover:bg-amber-500"
+                            }`}
+                        >
+                            Generate Random Points
                         </button>
 
                         <button
@@ -290,63 +447,13 @@ const KMeans = () => {
                         >
                             Clear All
                         </button>
-
-                        <div className="flex items-center">
-                            <label
-                                htmlFor="kValue"
-                                className="mr-2 text-gray-700"
-                            >
-                                Number of clusters (k):
-                            </label>
-                            <input
-                                id="kValue"
-                                type="number"
-                                min="2"
-                                max="6"
-                                value={k}
-                                onChange={(e) =>
-                                    setK(
-                                        Math.min(
-                                            6,
-                                            Math.max(
-                                                2,
-                                                parseInt(e.target.value) || 2
-                                            )
-                                        )
-                                    )
-                                }
-                                disabled={isRunning}
-                                className="w-16 px-2 py-1 border rounded bg-white/50"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="text-sm bg-white/50 px-3 py-1 rounded-full text-gray-700">
-                            Points: {points.length}
-                        </span>
-                        <span className="text-sm bg-white/50 px-3 py-1 rounded-full text-gray-700">
-                            Clusters: {k}
-                        </span>
-                        <span
-                            className={`text-sm ${
-                                isRunning ? "bg-amber-100" : "bg-white/50"
-                            } px-3 py-1 rounded-full text-gray-700`}
-                        >
-                            Iterations: {iterations}
-                        </span>
-                        {points.length < k && (
-                            <span className="text-sm bg-red-100 px-3 py-1 rounded-full text-red-700">
-                                Add at least {k} points to start
-                            </span>
-                        )}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 bg-white/70 rounded-xl shadow-sm p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="lg:col-span-3 bg-white/95 rounded-xl shadow-md border border-amber-200 overflow-hidden">
                         <div
-                            className="w-full h-[500px]"
+                            className="w-full h-[520px] relative"
                             onClick={handleCanvasClick}
                             style={{
                                 cursor: isRunning ? "default" : "crosshair",
@@ -359,99 +466,156 @@ const KMeans = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                    <div className="space-y-4">
+                        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-md border-2 border-amber-300 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-amber-800 border-b-2 border-amber-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-amber-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
                                 Instructions
                             </h3>
-                            <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-1">
+                            <ol className="list-decimal pl-5 text-sm text-amber-900 space-y-1 relative z-10">
                                 <li>Click on the graph to add data points</li>
+                                <li>Adjust the number of clusters (K)</li>
                                 <li>
-                                    Set the number of clusters (k) between 2 and
-                                    6
+                                    Click &apos;Start Clustering&apos; to begin
                                 </li>
-                                <li>
-                                    Click "Start Clustering" to begin the
-                                    algorithm
-                                </li>
-                                <li>
-                                    Watch as points get assigned to clusters
-                                </li>
-                                <li>
-                                    Triangles represent the cluster centroids
-                                </li>
+                                <li>Watch as centroids and clusters update</li>
+                                <li>Lower inertia means better clustering</li>
                             </ol>
                         </div>
 
-                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                                Algorithm Details
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md border-2 border-blue-200 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-blue-800 border-b-2 border-blue-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-blue-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14a6 6 0 100-12 6 6 0 000 12z"
+                                        clipRule="evenodd"
+                                    />
+                                    <path d="M10 6a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1H8a1 1 0 110-2h1V7a1 1 0 011-1z" />
+                                </svg>
+                                Algorithm Info
                             </h3>
-                            <div className="space-y-2 text-sm text-gray-700">
-                                <p>
+                            <div className="space-y-2 relative z-10">
+                                <p className="text-blue-900 bg-blue-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">Points:</span>
+                                    <span className="font-bold bg-blue-200 px-2 py-0.5 rounded-md">
+                                        {points.length}
+                                    </span>
+                                </p>
+                                <p className="text-blue-900 bg-blue-100/80 rounded-md px-3 py-1 flex justify-between items-center">
                                     <span className="font-medium">
-                                        Initialization:
-                                    </span>{" "}
-                                    Random placement of {k} centroids
+                                        Clusters (K):
+                                    </span>
+                                    <span className="font-bold bg-blue-200 px-2 py-0.5 rounded-md">
+                                        {k}
+                                    </span>
                                 </p>
-                                <p>
+                                <p
+                                    className={`${
+                                        isRunning
+                                            ? "text-blue-900 bg-blue-200/90"
+                                            : "text-blue-900 bg-blue-100/80"
+                                    } rounded-md px-3 py-1 flex justify-between items-center ${
+                                        isRunning ? "animate-pulse" : ""
+                                    }`}
+                                >
                                     <span className="font-medium">
-                                        Assignment:
-                                    </span>{" "}
-                                    Each point is assigned to the nearest
-                                    centroid
+                                        Iterations:
+                                    </span>
+                                    <span
+                                        className={`font-bold ${
+                                            isRunning
+                                                ? "bg-blue-300"
+                                                : "bg-blue-200"
+                                        } px-2 py-0.5 rounded-md`}
+                                    >
+                                        {iterations}
+                                    </span>
                                 </p>
-                                <p>
-                                    <span className="font-medium">Update:</span>{" "}
-                                    Centroids move to the average position of
-                                    their points
-                                </p>
-                                <p>
-                                    <span className="font-medium">
-                                        Convergence:
-                                    </span>{" "}
-                                    Algorithm stops when centroids stabilize
-                                </p>
+                                {iterations > 0 && (
+                                    <p className="text-blue-900 bg-blue-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                        <span className="font-medium">
+                                            Inertia:
+                                        </span>
+                                        <span className="font-bold bg-blue-200 px-2 py-0.5 rounded-md">
+                                            {inertia.toFixed(4)}
+                                        </span>
+                                    </p>
+                                )}
                             </div>
                         </div>
 
                         {clusters.length > 0 && (
-                            <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                                <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                                    Clustering Results
+                            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl shadow-md border-2 border-purple-200 p-4 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-16 h-16 bg-purple-200/50 rounded-bl-full"></div>
+                                <h3 className="text-lg font-bold mb-3 text-purple-800 border-b-2 border-purple-200 pb-1 flex items-center">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5 mr-2 text-purple-600"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                                        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                                    </svg>
+                                    Cluster Statistics
                                 </h3>
-                                <div className="space-y-2">
-                                    <p className="text-gray-700">
-                                        <span className="font-medium">
-                                            Total iterations:
-                                        </span>{" "}
-                                        {iterations}
-                                    </p>
+                                <div className="space-y-2 relative z-10">
                                     {Array(k)
                                         .fill()
                                         .map((_, i) => {
-                                            const count = clusters.filter(
-                                                (p) => p.cluster === i
-                                            ).length
+                                            const clusterPoints =
+                                                clusters.filter(
+                                                    (p) => p.cluster === i
+                                                )
+                                            const clusterColor = `hsl(${
+                                                ((i * 360) / k) % 360
+                                            }, 80%, 40%)`
                                             return (
                                                 <div
                                                     key={i}
-                                                    className="flex items-center gap-2"
+                                                    className="mb-2 bg-white/50 rounded-md p-2 border-l-4"
+                                                    style={{
+                                                        borderColor:
+                                                            clusterColor,
+                                                    }}
                                                 >
-                                                    <div
-                                                        className="w-4 h-4 rounded-full"
+                                                    <p
+                                                        className="font-medium"
                                                         style={{
-                                                            backgroundColor: `hsl(${
-                                                                ((i * 360) /
-                                                                    k) %
-                                                                360
-                                                            }, 70%, 70%)`,
+                                                            color: clusterColor,
                                                         }}
-                                                    ></div>
-                                                    <span className="text-sm text-gray-700">
-                                                        Cluster {i}: {count}{" "}
-                                                        points
-                                                    </span>
+                                                    >
+                                                        Cluster {i}
+                                                    </p>
+                                                    <div className="flex justify-between items-center mt-1">
+                                                        <span className="text-sm text-gray-700">
+                                                            Points:
+                                                        </span>
+                                                        <span className="font-bold text-sm px-2 py-0.5 rounded bg-white/80">
+                                                            {
+                                                                clusterPoints.length
+                                                            }
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             )
                                         })}
@@ -460,7 +624,9 @@ const KMeans = () => {
                         )}
                     </div>
                 </div>
-            </motion.div>
+
+                <KMeansTheory />
+            </div>
         </AlgorithmLayout>
     )
 }

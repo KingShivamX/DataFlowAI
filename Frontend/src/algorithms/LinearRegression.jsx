@@ -3,6 +3,7 @@ import { Chart } from "chart.js/auto"
 import { useNavigate } from "react-router-dom"
 import AlgorithmLayout from "./AlgorithmLayout"
 import { motion } from "framer-motion"
+import LinearRegressionTheory from "../components/theory/LinearRegressionTheory"
 
 const LinearRegression = () => {
     const chartRef = useRef(null)
@@ -36,7 +37,7 @@ const LinearRegression = () => {
                         {
                             label: "Data Points",
                             data: points,
-                            pointRadius: 5,
+                            pointRadius: 8,
                             backgroundColor: "rgba(54, 162, 235, 1)",
                             animation: isGeneratedPoints,
                             animationDuration: isGeneratedPoints ? 800 : 0,
@@ -256,27 +257,22 @@ const LinearRegression = () => {
 
     return (
         <AlgorithmLayout title="Linear Regression">
-            <motion.div
-                className="bg-white/30 backdrop-blur-sm rounded-3xl p-6 shadow-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-            >
-                <div className="mb-6">
-                    <p className="text-gray-700 mb-4">
+            <div className="px-2 sm:px-4">
+                <div className="mb-5">
+                    <p className="text-gray-700 mb-3">
                         Linear regression finds the best-fitting straight line
                         through a set of points. Click on the graph to add data
                         points, then train the model to see the resulting line.
                     </p>
 
-                    <div className="flex flex-wrap gap-3 mb-6">
+                    <div className="flex flex-wrap gap-3 mb-4">
                         <button
                             onClick={trainModel}
                             disabled={points.length < 2 || isTraining}
                             className={`px-4 py-2 rounded-lg ${
                                 points.length < 2 || isTraining
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-gradient-to-r from-yellow-500 to-amber-500 text-white hover:shadow-md"
+                                    : "bg-green-500 text-white hover:bg-green-600"
                             }`}
                         >
                             {isTraining ? "Training..." : "Train Model"}
@@ -284,7 +280,11 @@ const LinearRegression = () => {
                         <button
                             onClick={generateRandomPoints}
                             disabled={isTraining}
-                            className="px-4 py-2 bg-white/50 text-gray-700 rounded-lg hover:bg-white/70"
+                            className={`px-4 py-2 rounded-lg ${
+                                isTraining
+                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    : "bg-amber-400 text-amber-900 hover:bg-amber-500"
+                            }`}
                         >
                             Generate Random Points
                         </button>
@@ -306,8 +306,8 @@ const LinearRegression = () => {
                                 slope === 0
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                                     : showErrorLines
-                                    ? "bg-amber-500/80 text-white hover:bg-amber-500/90"
-                                    : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                                    ? "bg-blue-500 text-white hover:bg-blue-600"
+                                    : "bg-blue-100 text-blue-800 hover:bg-blue-200"
                             }`}
                         >
                             {showErrorLines
@@ -317,10 +317,10 @@ const LinearRegression = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 bg-white/70 rounded-xl shadow-sm p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="lg:col-span-3 bg-white/95 rounded-xl shadow-md border border-amber-200 overflow-hidden">
                         <div
-                            className="w-full h-[500px]"
+                            className="w-full h-[520px] relative"
                             onClick={handleCanvasClick}
                             style={{
                                 cursor: isTraining ? "default" : "crosshair",
@@ -333,67 +333,29 @@ const LinearRegression = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                                Model Parameters
-                            </h3>
-                            <div className="space-y-2">
-                                <p className="text-gray-700">
-                                    <span className="font-medium">Slope:</span>{" "}
-                                    {slope.toFixed(4)}
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">
-                                        Intercept:
-                                    </span>{" "}
-                                    {intercept.toFixed(4)}
-                                </p>
-                                <p className="text-gray-700 font-medium mt-2">
-                                    Equation: y = {slope.toFixed(2)}x +{" "}
-                                    {intercept.toFixed(2)}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                                Performance Metrics
-                            </h3>
-                            <div className="space-y-2">
-                                <p
-                                    className="text-gray-700"
-                                    title="R-squared measures how well the model fits the data (0 to 1, higher is better)"
+                    <div className="space-y-4">
+                        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-md border-2 border-amber-300 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-amber-800 border-b-2 border-amber-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-amber-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
                                 >
-                                    <span className="font-medium">R²:</span>{" "}
-                                    {metrics.r2.toFixed(4)}
-                                </p>
-                                <p
-                                    className="text-gray-700"
-                                    title="Mean Squared Error - average of squared differences between predictions and actual values"
-                                >
-                                    <span className="font-medium">MSE:</span>{" "}
-                                    {metrics.mse.toFixed(4)}
-                                </p>
-                                <p
-                                    className="text-gray-700"
-                                    title="Mean Absolute Error - average of absolute differences between predictions and actual values"
-                                >
-                                    <span className="font-medium">MAE:</span>{" "}
-                                    {metrics.mae.toFixed(4)}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold mb-2 text-gray-800">
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
                                 Instructions
                             </h3>
-                            <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-1">
+                            <ol className="list-decimal pl-5 text-sm text-amber-900 space-y-1 relative z-10">
                                 <li>Click on the graph to add data points</li>
                                 <li>Click 'Train Model' to fit a line</li>
                                 <li>
-                                    Check 'Show Error Lines' to see prediction
+                                    Use 'Show Error Lines' to see prediction
                                     errors
                                 </li>
                                 <li>
@@ -401,9 +363,103 @@ const LinearRegression = () => {
                                 </li>
                             </ol>
                         </div>
+
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md border-2 border-green-200 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-green-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-green-800 border-b-2 border-green-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-green-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599.8a1 1 0 01-.4 1.8l-3.951 1.58A1 1 0 0112 10.5V12h5a1 1 0 110 2H5a1 1 0 110-2h5v-1.5a1 1 0 01.202-.5l-3.951-1.58a1 1 0 11.4-1.8l3.951 1.58a1 1 0 01.398.8V3a1 1 0 011-1zm0 6.323l-3.5-1.4v4.154l3.5-1.4v-1.354zm7-5.323a1 1 0 011 1v8a1 1 0 11-2 0V4a1 1 0 011-1z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                                Model Parameters
+                            </h3>
+                            <div className="space-y-2 relative z-10">
+                                <p className="text-green-900 bg-green-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">Slope:</span>
+                                    <span className="font-bold bg-green-200 px-2 py-0.5 rounded-md">
+                                        {slope.toFixed(4)}
+                                    </span>
+                                </p>
+                                <p className="text-green-900 bg-green-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">
+                                        Intercept:
+                                    </span>
+                                    <span className="font-bold bg-green-200 px-2 py-0.5 rounded-md">
+                                        {intercept.toFixed(4)}
+                                    </span>
+                                </p>
+                                <div className="bg-white/60 rounded-md p-2 mt-2 border border-green-200">
+                                    <p className="text-green-800 font-medium text-center">
+                                        y ={" "}
+                                        <span className="font-bold">
+                                            {slope.toFixed(2)}
+                                        </span>
+                                        x +{" "}
+                                        <span className="font-bold">
+                                            {intercept.toFixed(2)}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-md border-2 border-blue-200 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-blue-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-blue-800 border-b-2 border-blue-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-blue-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                                    <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                                </svg>
+                                Performance Metrics
+                            </h3>
+                            <div className="space-y-2 relative z-10">
+                                <p
+                                    className="text-blue-900 bg-blue-100/80 rounded-md px-3 py-1 flex justify-between items-center"
+                                    title="R-squared measures how well the model fits the data (0 to 1, higher is better)"
+                                >
+                                    <span className="font-medium">R²:</span>
+                                    <span className="font-bold bg-blue-200 px-2 py-0.5 rounded-md">
+                                        {metrics.r2.toFixed(4)}
+                                    </span>
+                                </p>
+                                <p
+                                    className="text-blue-900 bg-blue-100/80 rounded-md px-3 py-1 flex justify-between items-center"
+                                    title="Mean Squared Error - average of squared differences between predictions and actual values"
+                                >
+                                    <span className="font-medium">MSE:</span>
+                                    <span className="font-bold bg-blue-200 px-2 py-0.5 rounded-md">
+                                        {metrics.mse.toFixed(4)}
+                                    </span>
+                                </p>
+                                <p
+                                    className="text-blue-900 bg-blue-100/80 rounded-md px-3 py-1 flex justify-between items-center"
+                                    title="Mean Absolute Error - average of absolute differences between predictions and actual values"
+                                >
+                                    <span className="font-medium">MAE:</span>
+                                    <span className="font-bold bg-blue-200 px-2 py-0.5 rounded-md">
+                                        {metrics.mae.toFixed(4)}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </motion.div>
+
+                <LinearRegressionTheory />
+            </div>
         </AlgorithmLayout>
     )
 }

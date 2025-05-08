@@ -79,3 +79,35 @@ main {
 ::-webkit-scrollbar-thumb:hover {
     background: #d97706;
 }
+
+/* KaTeX formula responsive styles */
+/* Ensure KaTeX formulas are displayed properly on all screen sizes */
+.katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+}
+
+/* Add smooth scrolling for formula containers on mobile */
+.overflow-x-auto::-webkit-scrollbar {
+    height: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+    background: #f9f5eb;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+    background: #fbbf24;
+    border-radius: 4px;
+}
+
+/* Adjust font size for formulas on smaller screens */
+@media screen and (max-width: 640px) {
+    .katex {
+        font-size: 1rem !important;
+    }
+    .katex-display > .katex {
+        white-space: normal;
+    }
+}

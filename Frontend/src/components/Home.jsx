@@ -62,7 +62,7 @@ const Home = () => {
 
     return (
         <motion.div
-            className="min-h-[100vh] pt-20 pb-12 bg-gradient-to-br from-yellow-50/80 via-amber-50/60 to-amber-50/80 bg-fixed"
+            className="min-h-[100vh] pt-20 pb-12 bg-gradient-to-br from-yellow-100 via-blue-50 to-amber-50/80 bg-fixed"
             initial="hidden"
             animate="visible"
             variants={containerVariants}
@@ -126,16 +126,16 @@ const Home = () => {
 
                 {/* Animated background elements */}
                 <div className="absolute inset-0 z-0 overflow-hidden">
-                    <div className="absolute top-20 left-10 w-64 h-64 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-                    <div className="absolute top-40 right-10 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-                    <div className="absolute bottom-10 left-1/2 w-80 h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+                    <div className="absolute top-20 left-10 w-64 h-64 bg-yellow-300 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-blob"></div>
+                    <div className="absolute top-40 right-10 w-72 h-72 bg-amber-300 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-blob animation-delay-2000"></div>
+                    <div className="absolute bottom-10 left-1/2 w-80 h-80 bg-orange-300 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-blob animation-delay-4000"></div>
                 </div>
             </motion.section>
 
             {/* Info Section */}
             <motion.section
                 variants={itemVariants}
-                className="py-12 md:py-20 bg-white/30 backdrop-blur-sm rounded-3xl mx-4 md:mx-8 lg:mx-10 shadow-sm"
+                className="py-12 md:py-20 bg-white/80 backdrop-blur-sm rounded-3xl mx-4 md:mx-8 lg:mx-10 shadow-sm"
             >
                 <div className="container mx-auto px-4 md:px-8 lg:px-10">
                     <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 justify-between items-center max-w-7xl mx-auto">
@@ -202,7 +202,7 @@ const Home = () => {
             {/* Algorithms Grid */}
             <motion.section
                 variants={itemVariants}
-                className="py-12 md:py-20 bg-white/30 backdrop-blur-sm rounded-3xl mx-4 md:mx-8 lg:mx-10 mt-12 shadow-sm"
+                className="py-12 md:py-20 bg-white/80 backdrop-blur-sm rounded-3xl mx-4 md:mx-8 lg:mx-10 mt-12 shadow-sm"
             >
                 <div className="container mx-auto px-4 md:px-8 lg:px-10">
                     <div className="max-w-7xl mx-auto">

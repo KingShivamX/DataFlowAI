@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Chart } from "chart.js/auto"
 import { useNavigate } from "react-router-dom"
 import AlgorithmLayout from "./AlgorithmLayout"
 import { motion } from "framer-motion"
+import LogisticRegressionTheory from "../components/theory/LogisticRegressionTheory"
 
 const LogisticRegression = () => {
     const chartRef = useRef(null)
@@ -163,6 +164,51 @@ const LogisticRegression = () => {
         return points
     }
 
+    // Generate random points following a linearly separable pattern
+    const generateRandomPoints = () => {
+        if (isTraining) return
+
+        const newPoints = []
+        const numPointsPerClass = 15
+
+        // Generate class 0 points (mostly in the bottom-left)
+        for (let i = 0; i < numPointsPerClass; i++) {
+            // Base coordinates biased toward lower-left quadrant
+            const x = Math.random() * 0.6
+            const y = Math.random() * 0.6
+
+            // Add some noise to make it more interesting
+            const xNoise = (Math.random() - 0.5) * 0.3
+            const yNoise = (Math.random() - 0.5) * 0.3
+
+            const xValue = Math.max(0, Math.min(1, x + xNoise))
+            const yValue = Math.max(0, Math.min(1, y + yNoise))
+
+            newPoints.push({ x: xValue, y: yValue, class: 0 })
+        }
+
+        // Generate class 1 points (mostly in the top-right)
+        for (let i = 0; i < numPointsPerClass; i++) {
+            // Base coordinates biased toward upper-right quadrant
+            const x = 0.4 + Math.random() * 0.6
+            const y = 0.4 + Math.random() * 0.6
+
+            // Add some noise to make it more interesting
+            const xNoise = (Math.random() - 0.5) * 0.3
+            const yNoise = (Math.random() - 0.5) * 0.3
+
+            const xValue = Math.max(0, Math.min(1, x + xNoise))
+            const yValue = Math.max(0, Math.min(1, y + yNoise))
+
+            newPoints.push({ x: xValue, y: yValue, class: 1 })
+        }
+
+        setPoints(newPoints)
+        setWeights({ w1: 0, w2: 0, b: 0 })
+        setShowDecisionBoundary(false)
+        setShouldAnimateDecisionBoundary(false)
+    }
+
     // Train the model using gradient descent
     const trainModel = async () => {
         setIsTraining(true)
@@ -285,21 +331,15 @@ const LogisticRegression = () => {
 
     return (
         <AlgorithmLayout title="Logistic Regression">
-            <motion.div
-                className="bg-white/30 backdrop-blur-sm rounded-3xl p-6 shadow-sm"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-            >
-                <div className="mb-6">
-                    <p className="text-gray-700 mb-4">
-                        Logistic regression classifies data points into two
-                        categories. Select a class and click on the graph to add
-                        points, then train the model to find the decision
-                        boundary.
+            <div className="px-2 sm:px-4">
+                <div className="mb-5">
+                    <p className="text-gray-700 mb-3">
+                        Logistic regression is used for binary classification
+                        problems. Add points of different classes, then train
+                        the model to find the decision boundary separating them.
                     </p>
 
-                    <div className="flex flex-wrap gap-3 mb-6 items-center">
+                    <div className="flex flex-wrap gap-3 mb-4 items-center">
                         <div className="flex items-center space-x-4 mr-4">
                             <div>
                                 <input
@@ -349,10 +389,22 @@ const LogisticRegression = () => {
                                     1 ||
                                 points.filter((p) => p.class === 1).length < 1
                                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-gradient-to-r from-yellow-500 to-amber-500 text-white hover:shadow-md"
+                                    : "bg-green-500 text-white hover:bg-green-600"
                             }`}
                         >
                             {isTraining ? "Training..." : "Train Model"}
+                        </button>
+
+                        <button
+                            onClick={generateRandomPoints}
+                            disabled={isTraining}
+                            className={`px-4 py-2 rounded-lg ${
+                                isTraining
+                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    : "bg-amber-400 text-amber-900 hover:bg-amber-500"
+                            }`}
+                        >
+                            Generate Random Points
                         </button>
 
                         <button
@@ -369,10 +421,10 @@ const LogisticRegression = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 bg-white/70 rounded-xl shadow-sm p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                    <div className="lg:col-span-3 bg-white/95 rounded-xl shadow-md border border-amber-200 overflow-hidden">
                         <div
-                            className="w-full h-[500px]"
+                            className="w-full h-[520px] relative"
                             onClick={handleCanvasClick}
                             style={{
                                 cursor: isTraining ? "default" : "crosshair",
@@ -385,88 +437,147 @@ const LogisticRegression = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                                Model Parameters
-                            </h3>
-                            <div className="space-y-2">
-                                <p className="text-gray-700">
-                                    <span className="font-medium">w₁:</span>{" "}
-                                    {weights.w1.toFixed(4)}
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">w₂:</span>{" "}
-                                    {weights.w2.toFixed(4)}
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">
-                                        b (bias):
-                                    </span>{" "}
-                                    {weights.b.toFixed(4)}
-                                </p>
-                                <p className="text-gray-700 font-medium mt-2">
-                                    P(class=1) = 1/(1+e^-(
-                                    {weights.w1.toFixed(2)}x₁ +{" "}
-                                    {weights.w2.toFixed(2)}x₂ +{" "}
-                                    {weights.b.toFixed(2)}))
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                                Performance Metrics
-                            </h3>
-                            <div className="space-y-2">
-                                <p className="text-gray-700">
-                                    <span className="font-medium">
-                                        Accuracy:
-                                    </span>{" "}
-                                    {(metrics.accuracy * 100).toFixed(1)}%
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">
-                                        Precision:
-                                    </span>{" "}
-                                    {(metrics.precision * 100).toFixed(1)}%
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">Recall:</span>{" "}
-                                    {(metrics.recall * 100).toFixed(1)}%
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">
-                                        F1 Score:
-                                    </span>{" "}
-                                    {(metrics.f1 * 100).toFixed(1)}%
-                                </p>
-                                <p className="text-gray-700">
-                                    <span className="font-medium">
-                                        Threshold:
-                                    </span>{" "}
-                                    {metrics.threshold.toFixed(2)}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
-                            <h3 className="text-lg font-semibold mb-2 text-gray-800">
+                    <div className="space-y-4">
+                        <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-md border-2 border-amber-300 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-amber-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-amber-800 border-b-2 border-amber-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-amber-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
                                 Instructions
                             </h3>
-                            <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-1">
+                            <ol className="list-decimal pl-5 text-sm text-amber-900 space-y-1 relative z-10">
                                 <li>Select a class (0 or 1)</li>
                                 <li>Click on the graph to add data points</li>
                                 <li>Add at least one point from each class</li>
                                 <li>
-                                    Click 'Train Model' to find the decision
-                                    boundary
+                                    Click &apos;Train Model&apos; to find the
+                                    decision boundary
                                 </li>
                             </ol>
                         </div>
+
+                        <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl shadow-md border-2 border-indigo-200 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-indigo-800 border-b-2 border-indigo-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-indigo-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path
+                                        fillRule="evenodd"
+                                        d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599.8a1 1 0 01-.4 1.8l-3.951 1.58A1 1 0 0112 10.5V12h5a1 1 0 110 2H5a1 1 0 110-2h5v-1.5a1 1 0 01.202-.5l-3.951-1.58a1 1 0 11.4-1.8l3.951 1.58a1 1 0 01.398.8V3a1 1 0 011-1zm0 6.323l-3.5-1.4v4.154l3.5-1.4v-1.354zm7-5.323a1 1 0 011 1v8a1 1 0 11-2 0V4a1 1 0 011-1z"
+                                        clipRule="evenodd"
+                                    />
+                                </svg>
+                                Model Parameters
+                            </h3>
+                            <div className="space-y-2 relative z-10">
+                                <p className="text-indigo-900 bg-indigo-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">w₁:</span>
+                                    <span className="font-bold bg-indigo-200 px-2 py-0.5 rounded-md">
+                                        {weights.w1.toFixed(4)}
+                                    </span>
+                                </p>
+                                <p className="text-indigo-900 bg-indigo-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">w₂:</span>
+                                    <span className="font-bold bg-indigo-200 px-2 py-0.5 rounded-md">
+                                        {weights.w2.toFixed(4)}
+                                    </span>
+                                </p>
+                                <p className="text-indigo-900 bg-indigo-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">
+                                        b (bias):
+                                    </span>
+                                    <span className="font-bold bg-indigo-200 px-2 py-0.5 rounded-md">
+                                        {weights.b.toFixed(4)}
+                                    </span>
+                                </p>
+                                <div className="bg-white/60 rounded-md p-2 mt-2 border border-indigo-200">
+                                    <p className="text-indigo-800 font-medium text-center text-sm">
+                                        P(class=1) = 1/(1+e
+                                        <sup>
+                                            -({weights.w1.toFixed(2)}x₁ +{" "}
+                                            {weights.w2.toFixed(2)}x₂ +{" "}
+                                            {weights.b.toFixed(2)})
+                                        </sup>
+                                        )
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-rose-50 to-rose-100 rounded-xl shadow-md border-2 border-rose-200 p-4 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-16 h-16 bg-rose-200/50 rounded-bl-full"></div>
+                            <h3 className="text-lg font-bold mb-3 text-rose-800 border-b-2 border-rose-200 pb-1 flex items-center">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5 mr-2 text-rose-600"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                >
+                                    <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                                    <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                                </svg>
+                                Performance Metrics
+                            </h3>
+                            <div className="space-y-2 relative z-10">
+                                <p className="text-rose-900 bg-rose-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">
+                                        Accuracy:
+                                    </span>
+                                    <span className="font-bold bg-rose-200 px-2 py-0.5 rounded-md">
+                                        {(metrics.accuracy * 100).toFixed(1)}%
+                                    </span>
+                                </p>
+                                <p className="text-rose-900 bg-rose-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">
+                                        Precision:
+                                    </span>
+                                    <span className="font-bold bg-rose-200 px-2 py-0.5 rounded-md">
+                                        {(metrics.precision * 100).toFixed(1)}%
+                                    </span>
+                                </p>
+                                <p className="text-rose-900 bg-rose-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">Recall:</span>
+                                    <span className="font-bold bg-rose-200 px-2 py-0.5 rounded-md">
+                                        {(metrics.recall * 100).toFixed(1)}%
+                                    </span>
+                                </p>
+                                <p className="text-rose-900 bg-rose-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">
+                                        F1 Score:
+                                    </span>
+                                    <span className="font-bold bg-rose-200 px-2 py-0.5 rounded-md">
+                                        {(metrics.f1 * 100).toFixed(1)}%
+                                    </span>
+                                </p>
+                                <p className="text-rose-900 bg-rose-100/80 rounded-md px-3 py-1 flex justify-between items-center">
+                                    <span className="font-medium">
+                                        Threshold:
+                                    </span>
+                                    <span className="font-bold bg-rose-200 px-2 py-0.5 rounded-md">
+                                        {metrics.threshold.toFixed(2)}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </motion.div>
+
+                <LogisticRegressionTheory />
+            </div>
         </AlgorithmLayout>
     )
 }
