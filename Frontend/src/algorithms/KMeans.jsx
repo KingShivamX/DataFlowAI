@@ -492,6 +492,10 @@ const KMeans = () => {
                                 </li>
                                 <li>Watch as centroids and clusters update</li>
                                 <li>Lower inertia means better clustering</li>
+                                <li>
+                                    Use "Generate Random Points" to create
+                                    sample data
+                                </li>
                             </ol>
                         </div>
 

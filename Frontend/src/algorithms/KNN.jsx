@@ -445,6 +445,10 @@ const KNN = () => {
                                 <li>
                                     Move test point to see classification update
                                 </li>
+                                <li>
+                                    Use "Generate Random Points" to create
+                                    sample data
+                                </li>
                             </ol>
                         </div>
 
