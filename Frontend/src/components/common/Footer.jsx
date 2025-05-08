@@ -17,7 +17,7 @@ const Footer = () => {
             { name: "K-Means Clustering", path: "/kmeans" },
         ],
         contact: [
-            { name: "Email", value: "dataflowai@support.com" },
+            { name: "Email", value: "shivamhippalgave@gmail.com" },
             { name: "Twitter", url: "https://twitter.com/KingShivamX" },
             {
                 name: "LinkedIn",
