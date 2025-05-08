@@ -463,6 +463,10 @@ const LogisticRegression = () => {
                                     Click &apos;Train Model&apos; to find the
                                     decision boundary
                                 </li>
+                                <li>
+                                    Use "Generate Random Points" to create
+                                    sample data
+                                </li>
                             </ol>
                         </div>
 

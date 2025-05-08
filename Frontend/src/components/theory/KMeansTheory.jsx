@@ -4,7 +4,7 @@ import { InlineMath, BlockMath } from "react-katex"
 const KMeansTheory = () => {
     return (
         <div className="bg-white/95 rounded-xl shadow-md border border-amber-200 p-4 mb-4">
-            <h2 className="text-xl font-bold text-gray-800 mb-3 border-b border-amber-200 pb-2 flex items-center">
+            <h2 className="text-2xl font-bold text-gray-800 mb-3 border-b border-amber-200 pb-2 flex items-center">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-6 w-6 mr-2 text-amber-600"
@@ -20,195 +20,300 @@ const KMeansTheory = () => {
                 K-Means Clustering Algorithm
             </h2>
 
-            <div className="space-y-4 text-gray-700">
+            <div className="space-y-4 text-gray-700 text-lg">
                 <div>
-                    <h3 className="font-semibold text-gray-800 mb-1">
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
                         What is K-Means Clustering?
                     </h3>
                     <p>
-                        K-Means is an unsupervised machine learning algorithm
-                        that groups similar data points together into K
-                        clusters. It aims to partition observations into
-                        clusters where each observation belongs to the cluster
-                        with the nearest mean (cluster centroid).
+                        <strong>K-Means</strong> is an{" "}
+                        <strong>unsupervised learning</strong> algorithm that
+                        groups similar data points into{" "}
+                        <strong>K clusters</strong>. The "K" represents the
+                        number of clusters specified before running the
+                        algorithm.
                     </p>
                 </div>
 
                 <div>
-                    <h3 className="font-semibold text-gray-800 mb-1">
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
                         The Algorithm
                     </h3>
                     <ol className="list-decimal pl-5 space-y-1">
-                        <li>Initialize K cluster centroids randomly</li>
                         <li>
-                            Assign each data point to the nearest centroid,
-                            forming K clusters
+                            <strong>Initialize</strong> K centroids randomly
                         </li>
                         <li>
-                            Recalculate the centroids as the mean of all points
-                            in each cluster
+                            <strong>Assign</strong> each data point to the
+                            nearest centroid
                         </li>
                         <li>
-                            Repeat steps 2-3 until centroids no longer move
-                            significantly or a maximum number of iterations is
-                            reached
+                            <strong>Update</strong> centroids as the mean of all
+                            points in the cluster
+                        </li>
+                        <li>
+                            <strong>Repeat</strong> steps 2-3 until centroids
+                            stabilize or max iterations reached
                         </li>
                     </ol>
                 </div>
 
                 <div>
-                    <h3 className="font-semibold text-gray-800 mb-1">
-                        Mathematical Formulation
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
+                        Distance Calculation
                     </h3>
-                    <p className="mb-2">
-                        K-Means aims to minimize the within-cluster sum of
-                        squares (WCSS), also known as inertia:
-                    </p>
-                    <div className="bg-amber-50 p-3 rounded-md overflow-x-auto">
+                    <p className="mb-2">Most commonly Euclidean distance:</p>
+                    <div className="bg-purple-50 p-3 rounded-md overflow-x-auto border-l-4 border-purple-500">
                         <div className="min-w-fit">
                             <BlockMath
-                                math={`J = \\sum_{j=1}^{k} \\sum_{i=1}^{n} \\| x_i^{(j)} - c_j \\|^2`}
+                                math={`d(\\mathbf{x}, \\mathbf{c}) = \\sqrt{\\sum_{i=1}^{n} (x_i - c_i)^2}`}
                             />
                         </div>
                     </div>
-                    <p className="mt-2">Where:</p>
+                    <p className="mt-2">
+                        <strong>Formula explanation:</strong>
+                    </p>
                     <ul className="list-disc pl-5 space-y-1">
                         <li>
-                            <InlineMath math="J" /> is the objective function
-                            (inertia) to minimize
-                        </li>
-                        <li>
-                            <InlineMath math="k" /> is the number of clusters
-                        </li>
-                        <li>
-                            <InlineMath math="n" /> is the number of data points
-                        </li>
-                        <li>
-                            <InlineMath math="x_i^{(j)}" /> is the i-th data
-                            point belonging to cluster j
-                        </li>
-                        <li>
-                            <InlineMath math="c_j" /> is the centroid of cluster
-                            j
-                        </li>
-                        <li>
-                            <InlineMath math="\| x_i^{(j)} - c_j \|^2" /> is the
-                            squared Euclidean distance between data point and
+                            <InlineMath math="d(\mathbf{x}, \mathbf{c})" /> =
+                            Euclidean distance between a data point and a
                             centroid
                         </li>
+                        <li>
+                            <InlineMath math="\mathbf{x}" /> = data point in
+                            n-dimensional space
+                        </li>
+                        <li>
+                            <InlineMath math="\mathbf{c}" /> = centroid in
+                            n-dimensional space
+                        </li>
+                        <li>
+                            <InlineMath math="x_i, c_i" /> = values of ith
+                            feature for point x and centroid c
+                        </li>
+                        <li>
+                            <InlineMath math="n" /> = number of features
+                            (dimensions)
+                        </li>
+                        <li>
+                            Used to assign each point to its nearest centroid
+                        </li>
                     </ul>
                 </div>
 
                 <div>
-                    <h3 className="font-semibold text-gray-800 mb-1">
-                        Cluster Assignment Step
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
+                        Centroid Update
                     </h3>
-                    <p className="mb-2">
-                        Each data point is assigned to the cluster with the
-                        nearest centroid:
-                    </p>
-                    <div className="bg-amber-50 p-3 rounded-md overflow-x-auto">
+                    <p className="mb-2">Each centroid is updated as:</p>
+                    <div className="bg-purple-50 p-3 rounded-md overflow-x-auto border-l-4 border-purple-500">
                         <div className="min-w-fit">
                             <BlockMath
-                                math={`S_j^{(t)} = \\{x_i : \\|x_i - c_j^{(t)}\\|^2 \\leq \\|x_i - c_l^{(t)}\\|^2 \\; \\forall \\, l, 1 \\leq l \\leq k\\}`}
+                                math={`\\mathbf{c}_j = \\frac{1}{|S_j|} \\sum_{\\mathbf{x} \\in S_j} \\mathbf{x}`}
                             />
                         </div>
                     </div>
                     <p className="mt-2">
-                        Where <InlineMath math="S_j^{(t)}" /> is the set of
-                        points assigned to cluster j at iteration t.
-                    </p>
-                </div>
-
-                <div>
-                    <h3 className="font-semibold text-gray-800 mb-1">
-                        Centroid Update Step
-                    </h3>
-                    <p className="mb-2">
-                        Each centroid is updated to be the mean of all points
-                        assigned to its cluster:
-                    </p>
-                    <div className="bg-amber-50 p-3 rounded-md overflow-x-auto">
-                        <div className="min-w-fit">
-                            <BlockMath
-                                math={`c_j^{(t+1)} = \\frac{1}{|S_j^{(t)}|} \\sum_{x_i \\in S_j^{(t)}} x_i`}
-                            />
-                        </div>
-                    </div>
-                    <p className="mt-2">
-                        Where <InlineMath math="|S_j^{(t)}|" /> is the number of
-                        points in cluster j at iteration t.
-                    </p>
-                </div>
-
-                <div>
-                    <h3 className="font-semibold text-gray-800 mb-1">
-                        Choosing the Optimal K
-                    </h3>
-                    <p>
-                        Determining the optimal number of clusters (K) is a
-                        critical step. Common methods include:
+                        <strong>Formula explanation:</strong>
                     </p>
                     <ul className="list-disc pl-5 space-y-1">
                         <li>
-                            Elbow Method: Plot inertia vs K and look for the
-                            "elbow" point
+                            <InlineMath math="\mathbf{c}_j" /> = centroid of
+                            cluster j
                         </li>
                         <li>
-                            Silhouette Analysis: Measure how similar objects are
-                            to their own cluster compared to other clusters
+                            <InlineMath math="S_j" /> = set of all data points
+                            assigned to cluster j
                         </li>
                         <li>
-                            Gap Statistic: Compare inertia with that of a
-                            reference null distribution
+                            <InlineMath math="|S_j|" /> = number of data points
+                            in cluster j
+                        </li>
+                        <li>
+                            <InlineMath math="\mathbf{x}" /> = data point in
+                            cluster j
+                        </li>
+                        <li>
+                            The new centroid is the mean (average) position of
+                            all points in the cluster
+                        </li>
+                        <li>
+                            Each feature/dimension is averaged independently
                         </li>
                     </ul>
                 </div>
 
                 <div>
-                    <h3 className="font-semibold text-gray-800 mb-1">
-                        Advantages and Limitations
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
+                        Objective Function
+                    </h3>
+                    <p className="mb-2">
+                        <strong>Inertia</strong> (Sum of squared distances to
+                        centroids):
+                    </p>
+                    <div className="bg-blue-50 p-3 rounded-md overflow-x-auto border-l-4 border-blue-500">
+                        <div className="min-w-fit">
+                            <BlockMath
+                                math={`J = \\sum_{j=1}^{k} \\sum_{\\mathbf{x} \\in S_j} ||\\mathbf{x} - \\mathbf{c}_j||^2`}
+                            />
+                        </div>
+                    </div>
+                    <p className="mt-2">
+                        <strong>Formula explanation:</strong>
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                        <li>
+                            <InlineMath math="J" /> = inertia (objective
+                            function to minimize)
+                        </li>
+                        <li>
+                            <InlineMath math="k" /> = number of clusters
+                        </li>
+                        <li>
+                            <InlineMath math="S_j" /> = set of data points in
+                            cluster j
+                        </li>
+                        <li>
+                            <InlineMath math="\mathbf{x}" /> = data point
+                        </li>
+                        <li>
+                            <InlineMath math="\mathbf{c}_j" /> = centroid of
+                            cluster j
+                        </li>
+                        <li>
+                            <InlineMath math="||\mathbf{x} - \mathbf{c}_j||^2" />{" "}
+                            = squared Euclidean distance between point x and
+                            centroid j
+                        </li>
+                        <li>
+                            <strong>
+                                Lower inertia means better clustering
+                            </strong>{" "}
+                            (more compact clusters)
+                        </li>
+                        <li>K-means algorithm tries to minimize this value</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
+                        Choosing the Optimal K
+                    </h3>
+                    <p className="mb-2">
+                        The Elbow Method looks for the "elbow" in the inertia
+                        curve:
+                    </p>
+                    <div className="bg-green-50 p-3 rounded-md overflow-x-auto border-l-4 border-green-500">
+                        <div className="min-w-fit">
+                            <BlockMath
+                                math={`\\text{Plot } J_k \\text{ for different values of } k`}
+                            />
+                        </div>
+                    </div>
+                    <p className="mt-2">
+                        <strong>Formula explanation:</strong>
+                    </p>
+                    <ul className="list-disc pl-5 space-y-1">
+                        <li>
+                            <InlineMath math="J_k" /> = inertia value when using
+                            k clusters
+                        </li>
+                        <li>Plot inertia (y-axis) against k values (x-axis)</li>
+                        <li>
+                            Look for the point where inertia reduction slows
+                            down (the "elbow")
+                        </li>
+                        <li>
+                            This point represents a good balance between model
+                            complexity and fit
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
+                        Advantages & Limitations
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <h4 className="font-medium text-green-700">
-                                Advantages
+                            <h4 className="font-bold text-green-700">
+                                ✓ Advantages
                             </h4>
                             <ul className="list-disc pl-5 space-y-1">
-                                <li>Simple to understand and implement</li>
-                                <li>Scales well to large datasets</li>
-                                <li>Guarantees convergence</li>
                                 <li>
-                                    Works well when clusters are spherical and
-                                    similar in size
+                                    <strong>Simple</strong> to implement
+                                </li>
+                                <li>
+                                    <strong>Fast</strong> for large datasets
+                                </li>
+                                <li>
+                                    <strong>Scales</strong> to high dimensions
+                                </li>
+                                <li>
+                                    <strong>Interpretable</strong> results
                                 </li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="font-medium text-red-700">
-                                Limitations
+                            <h4 className="font-bold text-red-700">
+                                ✗ Limitations
                             </h4>
                             <ul className="list-disc pl-5 space-y-1">
-                                <li>Requires specifying K in advance</li>
-                                <li>Sensitive to initial centroid placement</li>
-                                <li>Struggles with non-spherical clusters</li>
-                                <li>Sensitive to outliers</li>
-                                <li>May converge to local optima</li>
+                                <li>
+                                    Must specify <strong>K in advance</strong>
+                                </li>
+                                <li>
+                                    Sensitive to <strong>initialization</strong>
+                                </li>
+                                <li>
+                                    Assumes <strong>spherical clusters</strong>
+                                </li>
+                                <li>
+                                    Can find <strong>local optima</strong>
+                                </li>
                             </ul>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <h3 className="font-semibold text-gray-800 mb-1">
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
+                        K-Means++
+                    </h3>
+                    <p>
+                        An improved initialization method that selects initial
+                        centroids:
+                    </p>
+                    <ol className="list-decimal pl-5 space-y-1">
+                        <li>Choose first centroid randomly</li>
+                        <li>
+                            Select subsequent centroids with probability
+                            proportional to their squared distance from the
+                            closest existing centroid
+                        </li>
+                        <li>Leads to better and more consistent results</li>
+                    </ol>
+                </div>
+
+                <div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
                         Applications
                     </h3>
-                    <ul className="list-disc pl-5 space-y-1">
-                        <li>Customer segmentation</li>
-                        <li>Image compression</li>
-                        <li>Document clustering</li>
-                        <li>Anomaly detection</li>
-                        <li>Feature engineering</li>
+                    <ul className="list-disc pl-5 space-y-1 grid grid-cols-1 md:grid-cols-2">
+                        <li>
+                            <strong>Customer segmentation</strong> for marketing
+                        </li>
+                        <li>
+                            <strong>Image compression</strong> (color
+                            quantization)
+                        </li>
+                        <li>
+                            <strong>Document clustering</strong> in text
+                            analysis
+                        </li>
+                        <li>
+                            <strong>Anomaly detection</strong> in datasets
+                        </li>
                     </ul>
                 </div>
             </div>

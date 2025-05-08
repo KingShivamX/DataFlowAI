@@ -269,53 +269,6 @@ const Home = () => {
                     </div>
                 </div>
             </motion.section>
-
-            {/* CTA Section */}
-            <motion.section
-                variants={itemVariants}
-                className="py-16 md:py-20 pb-0 mt-12"
-            >
-                <div className="container mx-auto px-4 md:px-8 lg:px-10">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="bg-gradient-to-r from-yellow-500 to-amber-500 rounded-3xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
-                            <div className="absolute inset-0 opacity-10">
-                                <svg
-                                    className="h-full w-full"
-                                    viewBox="0 0 100 100"
-                                    preserveAspectRatio="none"
-                                >
-                                    <path
-                                        d="M0 100 L100 0 L100 100 Z"
-                                        fill="white"
-                                    ></path>
-                                </svg>
-                            </div>
-                            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-                                <div className="text-center md:text-left">
-                                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                                        Ready to get started?
-                                    </h2>
-                                    <p className="text-lg text-amber-100 max-w-xl">
-                                        Dive into the world of machine learning
-                                        with our interactive visualizations. No
-                                        coding experience required!
-                                    </p>
-                                </div>
-                                <div>
-                                    <button
-                                        onClick={() =>
-                                            navigate("/linear-regression")
-                                        }
-                                        className="px-6 py-2.5 sm:px-8 sm:py-4 text-sm sm:text-base bg-white text-amber-600 rounded-full font-bold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
-                                    >
-                                        Start Learning
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </motion.section>
         </motion.div>
     )
 }
