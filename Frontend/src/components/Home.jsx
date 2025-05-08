@@ -39,14 +39,14 @@ const Home = () => {
         },
     ]
 
-    // Animation variants
+    // Animation variants with faster timing
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.2,
-                delayChildren: 0.3,
+                staggerChildren: 0.05,
+                delayChildren: 0.1,
             },
         },
     }
@@ -56,7 +56,7 @@ const Home = () => {
         visible: {
             y: 0,
             opacity: 1,
-            transition: { duration: 0.5 },
+            transition: { duration: 0.2 },
         },
     }
 
@@ -78,7 +78,7 @@ const Home = () => {
                             className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6"
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
+                            transition={{ duration: 0.3, delay: 0.1 }}
                         >
                             <span className="bg-gradient-to-r from-yellow-600 via-amber-600 to-orange-500 bg-clip-text text-transparent">
                                 Visualize & Learn
@@ -92,7 +92,7 @@ const Home = () => {
                             className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto mb-8"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ duration: 1, delay: 0.5 }}
+                            transition={{ duration: 0.3, delay: 0.15 }}
                         >
                             Interactive visualizations making complex algorithms
                             easy to understand.
@@ -106,7 +106,7 @@ const Home = () => {
                             className="flex flex-col sm:flex-row gap-4 justify-center mt-8"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.8 }}
+                            transition={{ duration: 0.2, delay: 0.2 }}
                         >
                             <button
                                 onClick={() => navigate("/linear-regression")}
@@ -145,7 +145,7 @@ const Home = () => {
                                 initial={{ opacity: 0, x: -30 }}
                                 whileInView={{ opacity: 1, x: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.5 }}
+                                transition={{ duration: 0.2 }}
                             >
                                 What is Machine Learning?
                             </motion.h2>
@@ -154,7 +154,7 @@ const Home = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: 0.2 }}
+                                transition={{ duration: 0.2, delay: 0.1 }}
                             >
                                 <p className="text-lg text-gray-600 leading-relaxed">
                                     Machine Learning is teaching computers to
@@ -178,7 +178,7 @@ const Home = () => {
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 whileInView={{ opacity: 1, scale: 1 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.5 }}
+                                transition={{ duration: 0.2 }}
                                 whileHover={{ scale: 1.02 }}
                             >
                                 <img
@@ -212,7 +212,7 @@ const Home = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.5 }}
+                                transition={{ duration: 0.2 }}
                             >
                                 Explore Our Algorithms
                             </motion.h2>
@@ -221,7 +221,7 @@ const Home = () => {
                                 initial={{ opacity: 0 }}
                                 whileInView={{ opacity: 1 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: 0.2 }}
+                                transition={{ duration: 0.2, delay: 0.05 }}
                             >
                                 Interactive visualizations to help you
                                 understand how each algorithm works
@@ -236,8 +236,8 @@ const Home = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{
-                                        duration: 0.5,
-                                        delay: index * 0.1,
+                                        duration: 0.2,
+                                        delay: index * 0.05,
                                     }}
                                     whileHover={{ y: -5 }}
                                     onClick={() => navigate(algo.path)}

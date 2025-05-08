@@ -1,14 +1,14 @@
 import { motion } from "framer-motion"
 
 const About = () => {
-    // Animation variants
+    // Animation variants with faster timing
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.2,
-                duration: 0.5,
+                staggerChildren: 0.05,
+                duration: 0.2,
             },
         },
     }
@@ -18,7 +18,7 @@ const About = () => {
         visible: {
             y: 0,
             opacity: 1,
-            transition: { duration: 0.5 },
+            transition: { duration: 0.2 },
         },
     }
 

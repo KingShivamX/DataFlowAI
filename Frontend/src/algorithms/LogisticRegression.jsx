@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { Chart } from "chart.js/auto"
 import { useNavigate } from "react-router-dom"
+import AlgorithmLayout from "./AlgorithmLayout"
+import { motion } from "framer-motion"
 
 const LogisticRegression = () => {
     const chartRef = useRef(null)
@@ -269,6 +271,7 @@ const LogisticRegression = () => {
             threshold: optimalThreshold,
         })
         setShouldAnimateDecisionBoundary(true)
+        setShowDecisionBoundary(true)
         setIsTraining(false)
     }
 
@@ -281,168 +284,190 @@ const LogisticRegression = () => {
     }
 
     return (
-        <div className="container mx-auto p-4 min-h-screen bg-gray-50">
-            <div className="bg-white rounded-lg shadow-lg p-4">
-                <h2 className="text-2xl font-bold mb-4">Logistic Regression</h2>
-
-                {/* Control buttons */}
-                <div className="mb-4 flex gap-4 flex-wrap">
-                    <button
-                        onClick={() => setCurrentClass(0)}
-                        className={`px-4 py-2 ${
-                            currentClass === 0 ? "bg-blue-500" : "bg-gray-300"
-                        } text-white rounded`}
-                    >
-                        Add Class 0
-                    </button>
-                    <button
-                        onClick={() => setCurrentClass(1)}
-                        className={`px-4 py-2 ${
-                            currentClass === 1 ? "bg-red-500" : "bg-gray-300"
-                        } text-white rounded`}
-                    >
-                        Add Class 1
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (showDecisionBoundary)
-                                setShowDecisionBoundary(false)
-                            trainModel()
-                        }}
-                        disabled={points.length < 2 || isTraining}
-                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                        Train Model
-                    </button>
-                    <button
-                        onClick={clearPoints}
-                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                    >
-                        Clear Points
-                    </button>
-                    <button
-                        onClick={() =>
-                            setShowDecisionBoundary(!showDecisionBoundary)
-                        }
-                        disabled={weights.w1 === 0}
-                        className={`px-4 py-2 ${
-                            showDecisionBoundary ? "bg-red-500" : "bg-blue-500"
-                        } text-white rounded hover:opacity-90 disabled:bg-gray-400 disabled:cursor-not-allowed`}
-                    >
-                        {showDecisionBoundary
-                            ? "Hide Decision Boundary"
-                            : "Show Decision Boundary"}
-                    </button>
-                </div>
-
-                {/* Stats display */}
-                <div className="mb-4 text-sm text-gray-600">
-                    <p>Number of points: {points.length}</p>
-                    {points.length > 0 && weights.w1 !== 0 && (
-                        <p>
-                            Equation: z = {weights.w1.toFixed(3)}x₁ +{" "}
-                            {weights.w2.toFixed(3)}x₂ + {weights.b.toFixed(3)}
-                        </p>
-                    )}
-                </div>
-
-                {/* Chart container */}
-                <div className="relative w-full h-[50vh] md:h-[67vh]">
-                    <canvas
-                        ref={chartRef}
-                        onClick={handleCanvasClick}
-                        className="cursor-crosshair"
-                    />
-                </div>
-
-                {/* Instructions */}
-                <div className="mt-4 text-sm text-gray-600">
-                    <p>
-                        Click on the graph to add points of the selected class.
+        <AlgorithmLayout title="Logistic Regression">
+            <motion.div
+                className="bg-white/30 backdrop-blur-sm rounded-3xl p-6 shadow-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="mb-6">
+                    <p className="text-gray-700 mb-4">
+                        Logistic regression classifies data points into two
+                        categories. Select a class and click on the graph to add
+                        points, then train the model to find the decision
+                        boundary.
                     </p>
-                    <p>You need at least 2 points to train the model.</p>
+
+                    <div className="flex flex-wrap gap-3 mb-6 items-center">
+                        <div className="flex items-center space-x-4 mr-4">
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="class0"
+                                    checked={currentClass === 0}
+                                    onChange={() => setCurrentClass(0)}
+                                    className="mr-2"
+                                />
+                                <label
+                                    htmlFor="class0"
+                                    className="text-blue-600 cursor-pointer"
+                                    style={{ color: "rgba(54, 162, 235, 1)" }}
+                                >
+                                    Class 0
+                                </label>
+                            </div>
+                            <div>
+                                <input
+                                    type="radio"
+                                    id="class1"
+                                    checked={currentClass === 1}
+                                    onChange={() => setCurrentClass(1)}
+                                    className="mr-2"
+                                />
+                                <label
+                                    htmlFor="class1"
+                                    className="text-red-500 cursor-pointer"
+                                    style={{ color: "rgba(255, 99, 132, 1)" }}
+                                >
+                                    Class 1
+                                </label>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={trainModel}
+                            disabled={
+                                isTraining ||
+                                points.filter((p) => p.class === 0).length <
+                                    1 ||
+                                points.filter((p) => p.class === 1).length < 1
+                            }
+                            className={`px-4 py-2 rounded-lg ${
+                                isTraining ||
+                                points.filter((p) => p.class === 0).length <
+                                    1 ||
+                                points.filter((p) => p.class === 1).length < 1
+                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    : "bg-gradient-to-r from-yellow-500 to-amber-500 text-white hover:shadow-md"
+                            }`}
+                        >
+                            {isTraining ? "Training..." : "Train Model"}
+                        </button>
+
+                        <button
+                            onClick={clearPoints}
+                            disabled={isTraining || points.length === 0}
+                            className={`px-4 py-2 rounded-lg ${
+                                isTraining || points.length === 0
+                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                    : "bg-red-500/80 text-white hover:bg-red-500/90"
+                            }`}
+                        >
+                            Clear Points
+                        </button>
+                    </div>
                 </div>
 
-                {/* Metrics Display */}
-                {points.length > 0 && weights.w1 !== 0 && (
-                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                        <h3 className="font-semibold mb-2">
-                            Model Performance
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <div className="bg-white p-3 rounded border">
-                                <p className="font-medium">Accuracy:</p>
-                                <p className="text-lg">
-                                    {(metrics.accuracy * 100).toFixed(1)}%
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 bg-white/70 rounded-xl shadow-sm p-4">
+                        <div
+                            className="w-full h-[500px]"
+                            onClick={handleCanvasClick}
+                            style={{
+                                cursor: isTraining ? "default" : "crosshair",
+                            }}
+                        >
+                            <canvas
+                                ref={chartRef}
+                                className="w-full h-full"
+                            ></canvas>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
+                            <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                                Model Parameters
+                            </h3>
+                            <div className="space-y-2">
+                                <p className="text-gray-700">
+                                    <span className="font-medium">w₁:</span>{" "}
+                                    {weights.w1.toFixed(4)}
                                 </p>
-                            </div>
-                            <div className="bg-white p-3 rounded border">
-                                <p className="font-medium">Precision:</p>
-                                <p className="text-lg">
-                                    {(metrics.precision * 100).toFixed(1)}%
+                                <p className="text-gray-700">
+                                    <span className="font-medium">w₂:</span>{" "}
+                                    {weights.w2.toFixed(4)}
                                 </p>
-                            </div>
-                            <div className="bg-white p-3 rounded border">
-                                <p className="font-medium">Recall:</p>
-                                <p className="text-lg">
-                                    {(metrics.recall * 100).toFixed(1)}%
+                                <p className="text-gray-700">
+                                    <span className="font-medium">
+                                        b (bias):
+                                    </span>{" "}
+                                    {weights.b.toFixed(4)}
                                 </p>
-                            </div>
-                            <div className="bg-white p-3 rounded border">
-                                <p className="font-medium">F1 Score:</p>
-                                <p className="text-lg">
-                                    {(metrics.f1 * 100).toFixed(1)}%
+                                <p className="text-gray-700 font-medium mt-2">
+                                    P(class=1) = 1/(1+e^-(
+                                    {weights.w1.toFixed(2)}x₁ +{" "}
+                                    {weights.w2.toFixed(2)}x₂ +{" "}
+                                    {weights.b.toFixed(2)}))
                                 </p>
                             </div>
                         </div>
 
-                        <div className="mt-4 text-sm text-gray-600">
-                            <p className="font-medium mb-2">
-                                Understanding the Metrics:
-                            </p>
-                            <ul className="list-disc pl-4 space-y-2">
-                                <li>
+                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
+                            <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                                Performance Metrics
+                            </h3>
+                            <div className="space-y-2">
+                                <p className="text-gray-700">
                                     <span className="font-medium">
                                         Accuracy:
                                     </span>{" "}
-                                    Percentage of correct predictions (both
-                                    classes)
-                                </li>
-                                <li>
+                                    {(metrics.accuracy * 100).toFixed(1)}%
+                                </p>
+                                <p className="text-gray-700">
                                     <span className="font-medium">
                                         Precision:
                                     </span>{" "}
-                                    Of the points predicted as Class 1, how many
-                                    were actually Class 1
-                                </li>
-                                <li>
+                                    {(metrics.precision * 100).toFixed(1)}%
+                                </p>
+                                <p className="text-gray-700">
                                     <span className="font-medium">Recall:</span>{" "}
-                                    Of all actual Class 1 points, how many were
-                                    correctly identified
-                                </li>
-                                <li>
+                                    {(metrics.recall * 100).toFixed(1)}%
+                                </p>
+                                <p className="text-gray-700">
                                     <span className="font-medium">
                                         F1 Score:
                                     </span>{" "}
-                                    Harmonic mean of precision and recall,
-                                    providing a balanced measure
+                                    {(metrics.f1 * 100).toFixed(1)}%
+                                </p>
+                                <p className="text-gray-700">
+                                    <span className="font-medium">
+                                        Threshold:
+                                    </span>{" "}
+                                    {metrics.threshold.toFixed(2)}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white/70 rounded-xl shadow-sm p-4">
+                            <h3 className="text-lg font-semibold mb-2 text-gray-800">
+                                Instructions
+                            </h3>
+                            <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-1">
+                                <li>Select a class (0 or 1)</li>
+                                <li>Click on the graph to add data points</li>
+                                <li>Add at least one point from each class</li>
+                                <li>
+                                    Click 'Train Model' to find the decision
+                                    boundary
                                 </li>
-                            </ul>
+                            </ol>
                         </div>
                     </div>
-                )}
-            </div>
-
-            {/* Home button */}
-            <div className="mt-4 flex justify-start">
-                <button
-                    onClick={() => navigate("/")}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                    Back to Home
-                </button>
-            </div>
-        </div>
+                </div>
+            </motion.div>
+        </AlgorithmLayout>
     )
 }
 
